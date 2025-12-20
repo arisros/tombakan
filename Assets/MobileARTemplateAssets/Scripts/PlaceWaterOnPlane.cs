@@ -1,14 +1,15 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
-using UnityEngine.XR.ARSubsystems;
 
 public class PlaceWaterOnPlane : MonoBehaviour
 {
     public ARRaycastManager raycastManager;
+    public ARPlaneManager planeManager;
+    public ARPointCloudManager pointCloudManager;
     public GameObject waterPlane;
 
-    static List<ARRaycastHit> hits = new List<ARRaycastHit>();
+    static List<ARRaycastHit> hits = new();
 
     void Update()
     {
@@ -19,15 +20,56 @@ public class PlaceWaterOnPlane : MonoBehaviour
         if (touch.phase != TouchPhase.Began)
             return;
 
-        if (raycastManager.Raycast(touch.position, hits, TrackableType.PlaneWithinPolygon))
+        if (
+            raycastManager.Raycast(
+                touch.position,
+                hits,
+                UnityEngine.XR.ARSubsystems.TrackableType.PlaneWithinPolygon
+            )
+        )
         {
             Pose hitPose = hits[0].pose;
 
-            // POSISI: nempel lantai + offset tipis
-            waterPlane.transform.position = hitPose.position + Vector3.up * 0.01f;
+            waterPlane.transform.position = hitPose.position;
+            waterPlane.SetActive(true);
 
-            // ROTASI: PAKSA DATAR (air selalu horizontal)
-            waterPlane.transform.rotation = Quaternion.Euler(0, 0, 0);
+            DisableARPlanes();
+        }
+    }
+
+    void DisableARPlanes()
+    {
+        if (planeManager != null)
+        {
+            planeManager.enabled = false;
+
+            foreach (var plane in planeManager.trackables)
+            {
+                plane.gameObject.SetActive(false);
+
+                // 🔥 matikan komponen plane
+                var meshVis = plane.GetComponent<ARPlaneMeshVisualizer>();
+                if (meshVis)
+                    meshVis.enabled = false;
+
+                // var feather = plane.GetComponent<ARFeatheredPlaneMeshVisualize>();
+                // if (feather)
+                //     feather.enabled = false;
+
+                var collider = plane.GetComponent<MeshCollider>();
+                var feather = plane.GetComponent("ARFeatheredPlaneMeshVisualizer") as Behaviour;
+                if (feather != null)
+                {
+                    feather.enabled = false;
+                }
+                if (collider)
+                    collider.enabled = false;
+            }
+        }
+
+        if (pointCloudManager != null)
+        {
+            pointCloudManager.enabled = false;
         }
     }
 }

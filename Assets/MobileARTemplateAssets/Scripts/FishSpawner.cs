@@ -4,8 +4,11 @@ public class FishSpawner : MonoBehaviour
 {
     public GameObject fishPrefab;
     public Transform waterPlane;
+
     public int fishCount = 5;
     public float spawnRadius = 1.5f;
+
+    public Material correctFishMaterial;
 
     void Start()
     {
@@ -14,20 +17,34 @@ public class FishSpawner : MonoBehaviour
 
     void SpawnFish()
     {
+        int correctIndex = Random.Range(0, fishCount);
+
         for (int i = 0; i < fishCount; i++)
         {
-            Vector3 randomPos =
+            Vector3 pos =
                 waterPlane.position
                 + new Vector3(
                     Random.Range(-spawnRadius, spawnRadius),
-                    -0.05f, // sedikit di bawah air
+                    Random.Range(-0.3f, -0.1f), // depth
                     Random.Range(-spawnRadius, spawnRadius)
                 );
 
-            GameObject fish = Instantiate(fishPrefab, randomPos, Quaternion.identity);
+            GameObject fish = Instantiate(fishPrefab, pos, Quaternion.identity);
 
-            fish.transform.LookAt(waterPlane.position + Random.insideUnitSphere);
-            fish.AddComponent<FishSwim>();
+            FishSwim swim = fish.AddComponent<FishSwim>();
+            swim.horizontalRadius = spawnRadius;
+
+            // tandai ikan benar
+            if (i == correctIndex)
+            {
+                var renderer = fish.GetComponentInChildren<Renderer>();
+                if (renderer != null)
+                {
+                    renderer.material = correctFishMaterial;
+                }
+
+                fish.tag = "CorrectFish";
+            }
         }
     }
 }

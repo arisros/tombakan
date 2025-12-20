@@ -2,45 +2,73 @@ using UnityEngine;
 
 public class FishSwim : MonoBehaviour
 {
-    public float speed = 0.2f;
-    public float turnSpeed = 1.5f;
-    public float swimRadius = 0.5f;
+    [Header("Movement")]
+    public float speed = 0.4f;
+    public float turnSmoothness = 2f;
+    public float verticalSpeed = 0.15f;
 
-    private Vector3 center;
-    private Vector3 target;
+    [Header("Swim Area")]
+    public float horizontalRadius = 1.5f;
+    public float minDepth = -0.3f;
+    public float maxDepth = -0.08f;
+
+    private Vector3 swimCenter;
+    private Vector3 velocity;
+    private float verticalOffset;
 
     void Start()
     {
-        center = transform.position;
-        PickNewTarget();
+        swimCenter = transform.position;
+
+        // random initial direction
+        velocity = Random.onUnitSphere;
+        velocity.y = Random.Range(-0.2f, 0.2f);
+        velocity.Normalize();
+
+        verticalOffset = Random.Range(minDepth, maxDepth);
     }
 
     void Update()
     {
-        Vector3 dir = target - transform.position;
+        // subtle random steering (fish-like)
+        Vector3 randomSteer = new Vector3(
+            Random.Range(-0.3f, 0.3f),
+            Random.Range(-0.2f, 0.2f),
+            Random.Range(-0.3f, 0.3f)
+        );
 
-        if (dir.magnitude < 0.05f)
+        velocity = Vector3.Lerp(
+            velocity,
+            (velocity + randomSteer).normalized,
+            Time.deltaTime * turnSmoothness
+        );
+
+        // move
+        transform.position += velocity * speed * Time.deltaTime;
+
+        // vertical swim (naik turun halus)
+        float targetY = swimCenter.y + verticalOffset;
+        transform.position = new Vector3(
+            transform.position.x,
+            Mathf.Lerp(transform.position.y, targetY, Time.deltaTime * verticalSpeed),
+            transform.position.z
+        );
+
+        // keep inside horizontal area
+        Vector3 flatOffset = transform.position - swimCenter;
+        flatOffset.y = 0;
+
+        if (flatOffset.magnitude > horizontalRadius)
         {
-            PickNewTarget();
+            Vector3 backDir = (swimCenter - transform.position).normalized;
+            velocity = Vector3.Lerp(velocity, backDir, Time.deltaTime * 2f);
         }
-        else
+
+        // rotation follow velocity
+        if (velocity.sqrMagnitude > 0.001f)
         {
-            // Rotate
-            Quaternion lookRot = Quaternion.LookRotation(dir);
-            transform.rotation = Quaternion.Slerp(
-                transform.rotation,
-                lookRot,
-                Time.deltaTime * turnSpeed
-            );
-
-            // Move forward
-            transform.Translate(Vector3.forward * speed * Time.deltaTime);
+            Quaternion lookRot = Quaternion.LookRotation(velocity);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRot, Time.deltaTime * 3f);
         }
-    }
-
-    void PickNewTarget()
-    {
-        Vector2 rand = Random.insideUnitCircle * swimRadius;
-        target = center + new Vector3(rand.x, 0, rand.y);
     }
 }
