@@ -1,0 +1,3 @@
+<ui:UXML xmlns:ui="UnityEngine.UIElements" xmlns:uie="UnityEditor.UIElements" editor-extension-mode="False">
+    <Style src="project://database/Assets/LevelPill.uss?fileID=7433441132597879392&amp;guid=dcdc214e8a3554f93912a2ac9f763c39&amp;type=3#LevelPill" />
+</ui:UXML>

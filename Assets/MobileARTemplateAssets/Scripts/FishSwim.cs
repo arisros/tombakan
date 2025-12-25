@@ -4,71 +4,119 @@ public class FishSwim : MonoBehaviour
 {
     [Header("Movement")]
     public float speed = 0.4f;
-    public float turnSmoothness = 2f;
-    public float verticalSpeed = 0.15f;
+    public float turnSmoothness = 1.5f;
 
     [Header("Swim Area")]
     public float horizontalRadius = 1.5f;
     public float minDepth = -0.3f;
     public float maxDepth = -0.08f;
 
+    [Header("Depth")]
+    public float depthLerp = 0.4f;
+    public float depthChangeInterval = 2.5f;
+
+    [Header("Turning Bank")]
+    public float bankAngle = 12f;
+    public float bankSmooth = 4f;
+
     private Vector3 swimCenter;
-    private Vector3 velocity;
-    private float verticalOffset;
+    private Vector3 direction;
+    private Vector3 lastDirection;
+
+    private float noiseOffset;
+    private float targetDepth;
+    private float nextDepthChange;
+
+    private float currentBank;
 
     void Start()
     {
         swimCenter = transform.position;
 
-        // random initial direction
-        velocity = Random.onUnitSphere;
-        velocity.y = Random.Range(-0.2f, 0.2f);
-        velocity.Normalize();
+        direction = Random.onUnitSphere;
+        direction.y = 0f;
+        direction.Normalize();
 
-        verticalOffset = Random.Range(minDepth, maxDepth);
+        speed *= Random.Range(0.85f, 1.15f);
+        turnSmoothness *= Random.Range(0.8f, 1.2f);
+
+        lastDirection = direction;
+
+        noiseOffset = Random.Range(0f, 100f);
+        targetDepth = Random.Range(minDepth, maxDepth);
+        nextDepthChange = Time.time + Random.Range(1f, depthChangeInterval);
     }
 
     void Update()
     {
-        // subtle random steering (fish-like)
-        Vector3 randomSteer = new Vector3(
-            Random.Range(-0.3f, 0.3f),
-            Random.Range(-0.2f, 0.2f),
-            Random.Range(-0.3f, 0.3f)
+        float t = Time.time + noiseOffset;
+
+        // --- Steering brain (Perlin Noise) ---
+        Vector3 noiseDir = new Vector3(
+            Mathf.PerlinNoise(t, 0f) - 0.5f,
+            0f,
+            Mathf.PerlinNoise(0f, t) - 0.5f
         );
 
-        velocity = Vector3.Lerp(
-            velocity,
-            (velocity + randomSteer).normalized,
-            Time.deltaTime * turnSmoothness
-        );
+        Vector3 desiredDir = (direction + noiseDir * 0.6f).normalized;
 
-        // move
-        transform.position += velocity * speed * Time.deltaTime;
+        direction = Vector3.Lerp(direction, desiredDir, Time.deltaTime * turnSmoothness).normalized;
 
-        // vertical swim (naik turun halus)
-        float targetY = swimCenter.y + verticalOffset;
+        // --- Move forward ---
+        transform.position += direction * speed * Time.deltaTime;
+
+        // --- Depth retarget ---
+        if (Time.time > nextDepthChange)
+        {
+            targetDepth = Random.Range(minDepth, maxDepth);
+            nextDepthChange = Time.time + Random.Range(1.2f, depthChangeInterval);
+        }
+
+        float desiredY = swimCenter.y + targetDepth;
         transform.position = new Vector3(
             transform.position.x,
-            Mathf.Lerp(transform.position.y, targetY, Time.deltaTime * verticalSpeed),
+            Mathf.Lerp(transform.position.y, desiredY, Time.deltaTime * depthLerp),
             transform.position.z
         );
 
-        // keep inside horizontal area
-        Vector3 flatOffset = transform.position - swimCenter;
-        flatOffset.y = 0;
+        // --- Keep inside horizontal radius ---
+        Vector3 flat = transform.position - swimCenter;
+        flat.y = 0f;
 
-        if (flatOffset.magnitude > horizontalRadius)
+        if (flat.magnitude > horizontalRadius)
         {
-            Vector3 backDir = (swimCenter - transform.position).normalized;
-            velocity = Vector3.Lerp(velocity, backDir, Time.deltaTime * 2f);
+            Vector3 back = (swimCenter - transform.position);
+            back.y = 0f;
+            back.Normalize();
+
+            direction = Vector3.Lerp(direction, back, Time.deltaTime * 2f).normalized;
         }
 
-        // rotation follow velocity
-        if (velocity.sqrMagnitude > 0.001f)
+        // --- Root rotation + banking ---
+        if (direction.sqrMagnitude > 0.01f)
         {
-            Quaternion lookRot = Quaternion.LookRotation(velocity);
-            transform.rotation = Quaternion.Slerp(transform.rotation, lookRot, Time.deltaTime * 3f);
+            Quaternion look = Quaternion.LookRotation(direction);
+
+            float signedTurn = Vector3.SignedAngle(lastDirection, direction, Vector3.up) / 90f;
+
+            float targetBank = Mathf.Clamp(-signedTurn * bankAngle, -bankAngle, bankAngle);
+
+            currentBank = Mathf.Lerp(currentBank, targetBank, Time.deltaTime * bankSmooth);
+
+            Quaternion bankRot = Quaternion.AngleAxis(currentBank, Vector3.forward);
+
+            Quaternion finalRot = look * bankRot;
+
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                finalRot,
+                Time.deltaTime * 6f
+            );
         }
+
+        lastDirection = direction;
     }
+
+    // Optional helper for FishAnimate
+    public float NormalizedSpeed => Mathf.Clamp01(speed / 1.2f);
 }

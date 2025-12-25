@@ -47,14 +47,9 @@ public class PlaceWaterOnPlane : MonoBehaviour
             {
                 plane.gameObject.SetActive(false);
 
-                // 🔥 matikan komponen plane
                 var meshVis = plane.GetComponent<ARPlaneMeshVisualizer>();
                 if (meshVis)
                     meshVis.enabled = false;
-
-                // var feather = plane.GetComponent<ARFeatheredPlaneMeshVisualize>();
-                // if (feather)
-                //     feather.enabled = false;
 
                 var collider = plane.GetComponent<MeshCollider>();
                 var feather = plane.GetComponent("ARFeatheredPlaneMeshVisualizer") as Behaviour;

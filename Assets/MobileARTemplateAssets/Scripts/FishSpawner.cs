@@ -8,15 +8,17 @@ public class FishSpawner : MonoBehaviour
     public int fishCount = 5;
     public float spawnRadius = 1.5f;
 
-    public Material correctFishMaterial;
+    private readonly float minDepth = -0.3f;
+    private readonly float maxDepth = -0.1f;
 
-    void Start()
-    {
-        SpawnFish();
-    }
+    // simpan ikan aktif
+    private GameObject[] spawnedFish;
 
-    void SpawnFish()
+    public void SpawnFish(Color targetColor)
     {
+        ClearFish();
+
+        spawnedFish = new GameObject[fishCount];
         int correctIndex = Random.Range(0, fishCount);
 
         for (int i = 0; i < fishCount; i++)
@@ -25,26 +27,59 @@ public class FishSpawner : MonoBehaviour
                 waterPlane.position
                 + new Vector3(
                     Random.Range(-spawnRadius, spawnRadius),
-                    Random.Range(-0.3f, -0.1f), // depth
+                    Random.Range(minDepth, maxDepth),
                     Random.Range(-spawnRadius, spawnRadius)
                 );
 
             GameObject fish = Instantiate(fishPrefab, pos, Quaternion.identity);
 
+            // movement
             FishSwim swim = fish.AddComponent<FishSwim>();
             swim.horizontalRadius = spawnRadius;
 
-            // tandai ikan benar
-            if (i == correctIndex)
-            {
-                var renderer = fish.GetComponentInChildren<Renderer>();
-                if (renderer != null)
-                {
-                    renderer.material = correctFishMaterial;
-                }
+            // warna
+            Color fishColor = (i == correctIndex) ? targetColor : RandomOtherColor(targetColor);
 
-                fish.tag = "CorrectFish";
-            }
+            ApplyColor(fish, fishColor);
+
+            // kasih info ke fish
+            FishTarget ft = fish.GetComponent<FishTarget>();
+
+            if (ft != null)
+                ft.fishColor = fishColor;
+
+            spawnedFish[i] = fish;
         }
+    }
+
+    void ClearFish()
+    {
+        if (spawnedFish == null)
+            return;
+
+        foreach (var fish in spawnedFish)
+        {
+            if (fish)
+                Destroy(fish);
+        }
+    }
+
+    void ApplyColor(GameObject fish, Color color)
+    {
+        var renderer = fish.GetComponentInChildren<Renderer>();
+        if (renderer)
+            renderer.material.color = color;
+    }
+
+    Color RandomOtherColor(Color target)
+    {
+        Color[] colors = { Color.red, Color.green, Color.blue };
+        Color c;
+        do
+        {
+            c = colors[Random.Range(0, colors.Length)];
+        } while (c == target);
+
+        return c;
     }
 }

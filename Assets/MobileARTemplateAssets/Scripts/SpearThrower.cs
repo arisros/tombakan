@@ -1,51 +1,77 @@
+using System.Collections;
 using UnityEngine;
 
 public class SpearThrower : MonoBehaviour
 {
     [Header("References")]
     public Camera arCamera;
+    public GameObject spearFake;
+    public GameObject spearProjectilePrefab;
     public Transform spearHolder;
-    public GameObject spearPrefab;
 
-    [Header("Settings")]
+    [Header("Holder Offset (POV Pundak)")]
+    public Vector3 holderPositionOffset = new Vector3(0.2f, -0.15f, 0.35f);
+    public Vector3 holderRotationOffset = Vector3.zero;
+
+    [Header("Throw Settings")]
     public float throwForce = 15f;
+    public float spearLifeTime = 2.5f;
+    public float cooldown = 1.2f;
 
-    private GameObject currentSpear;
+    bool canThrow = true;
+    SpearLeash leash;
 
-    void Start()
+    void Awake()
     {
-        SpawnSpear();
+        leash = FindObjectOfType<SpearLeash>();
     }
 
-    void SpawnSpear()
+    void LateUpdate()
     {
-        currentSpear = Instantiate(spearPrefab, spearHolder);
-        currentSpear.transform.localPosition = Vector3.zero;
-        currentSpear.transform.localRotation = Quaternion.identity;
+        if (!arCamera || !spearHolder)
+            return;
 
-        // pastikan rigidbody non-aktif dulu
-        Rigidbody rb = currentSpear.GetComponent<Rigidbody>();
-        if (rb)
-        {
-            rb.isKinematic = true;
-        }
+        spearHolder.position = arCamera.transform.TransformPoint(holderPositionOffset);
+        spearHolder.rotation = arCamera.transform.rotation * Quaternion.Euler(holderRotationOffset);
     }
 
     public void ThrowSpear()
     {
-        if (!currentSpear)
+        if (!canThrow)
             return;
+        canThrow = false;
 
-        currentSpear.transform.parent = null;
+        if (spearFake)
+            spearFake.SetActive(false);
 
-        Rigidbody rb = currentSpear.GetComponent<Rigidbody>();
+        GameObject spear = Instantiate(
+            spearProjectilePrefab,
+            arCamera.transform.position + arCamera.transform.forward * 0.4f,
+            arCamera.transform.rotation
+        );
+
+        if (leash)
+            leash.spearTip = spear.transform;
+
+        Rigidbody rb = spear.GetComponent<Rigidbody>();
         if (rb)
-        {
-            rb.isKinematic = false;
             rb.velocity = arCamera.transform.forward * throwForce;
-        }
 
-        // spawn tombak baru setelah lempar
-        Invoke(nameof(SpawnSpear), 0.5f);
+        Destroy(spear, spearLifeTime);
+
+        StartCoroutine(CooldownRoutine());
+    }
+
+    IEnumerator CooldownRoutine()
+    {
+        yield return new WaitForSeconds(cooldown);
+
+        if (spearFake)
+            spearFake.SetActive(true);
+
+        if (leash)
+            leash.spearTip = null;
+
+        canThrow = true;
     }
 }
