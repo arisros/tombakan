@@ -74,4 +74,25 @@ public class SpearThrower : MonoBehaviour
 
         canThrow = true;
     }
+
+    public void LockThrow(float delay)
+    {
+        StopAllCoroutines();
+        StartCoroutine(LockRoutine(delay));
+    }
+
+    IEnumerator LockRoutine(float delay)
+    {
+        canThrow = false;
+
+        if (spearFake)
+            spearFake.SetActive(false);
+
+        yield return new WaitForSeconds(delay);
+
+        if (spearFake)
+            spearFake.SetActive(true);
+
+        canThrow = true;
+    }
 }

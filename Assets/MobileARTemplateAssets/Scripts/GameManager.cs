@@ -30,6 +30,11 @@ public class GameManager : MonoBehaviour
     [Header("Target Color UI")]
     public Image targetColorImage;
 
+    [Header("Spear")]
+    public SpearThrower spearThrower;
+
+    public float hitDelay = 2.2f;
+
     [Header("HUD Feedback UI")]
     public GameObject happyFeedback;
     public TMP_Text happyFeedbackText;
@@ -207,7 +212,12 @@ public class GameManager : MonoBehaviour
         }
 
         UpdateScoreUI();
-        Invoke(nameof(PickNewTarget), 3f);
+
+        // 🔒 LOCK THROW + DELAY
+        if (spearThrower)
+            spearThrower.LockThrow(hitDelay);
+
+        Invoke(nameof(PickNewTarget), hitDelay + 0.8f);
     }
 
     void ShowHappy()

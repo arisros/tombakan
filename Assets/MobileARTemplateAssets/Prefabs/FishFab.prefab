@@ -372,8 +372,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 81f9f4f03f53c43f6a115eceb76ea10d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  hitRadius: 0.5
-  fishColor: {r: 0, g: 0, b: 0, a: 0}
+  hitRadius: 0.26
 --- !u!1 &8634222802320203020
 GameObject:
   m_ObjectHideFlags: 0
