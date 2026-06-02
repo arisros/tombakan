@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -20,7 +21,8 @@ public class GameManager : MonoBehaviour
 
     [Header("Timer UI")]
     public Image timerBarFill;
-    public float warningTimeThreshold = 10f; // detik terakhir
+    public TMP_Text timerCountdownText;
+    public float warningTimeThreshold = 10f;
     public Color timerNormalColor = Color.white;
     public Color timerWarningColor = Color.red;
 
@@ -50,6 +52,7 @@ public class GameManager : MonoBehaviour
     public Image TierLow;
     public Image TierMid;
     public Image TierHigh;
+    public Image TierLegend;
 
     [Header("Fish Managers")]
     public FishSpawner fishSpawner;
@@ -61,10 +64,12 @@ public class GameManager : MonoBehaviour
     int pointPerCorrectHit = 100;
     int penaltyPerWrongHit = 25;
 
-    // Collected fish colors for stats
-    string[] collectedFishColors = new string[1000];
+    // Combo streak
+    int comboStreak;
 
-    float timer;
+    // Collected fish colors for result screen
+    List<string> collectedFishColors = new List<string>();
+
     float timeLeft;
 
     // Game running state
@@ -89,6 +94,9 @@ public class GameManager : MonoBehaviour
 
         timerBarFill.fillAmount = Mathf.Clamp01(timeLeft / gameDuration);
 
+        if (timerCountdownText != null)
+            timerCountdownText.text = Mathf.CeilToInt(Mathf.Max(0f, timeLeft)).ToString();
+
         if (timeLeft <= warningTimeThreshold && !timerWarningActive)
         {
             timerWarningActive = true;
@@ -112,6 +120,8 @@ public class GameManager : MonoBehaviour
         // RESET STATE
         score = 0;
         correctHitCount = 0;
+        comboStreak = 0;
+        collectedFishColors.Clear();
 
         timeLeft = gameDuration;
         gameRunning = true;
@@ -129,6 +139,9 @@ public class GameManager : MonoBehaviour
         timerBarFill.color = timerNormalColor;
         timerBarFill.transform.localScale = Vector3.one;
 
+        if (timerCountdownText != null)
+            timerCountdownText.text = Mathf.CeilToInt(gameDuration).ToString();
+
         resultContainer.SetActive(false);
 
         UpdateScoreUI();
@@ -145,16 +158,15 @@ public class GameManager : MonoBehaviour
 
         AudioManager.I.PlayEnd();
 
-        string[] mappedColors = new string[correctHitCount];
+        string[] mappedColors = new string[collectedFishColors.Count];
 
-        // ColorHexLocalization
-        for (int i = 0; i < correctHitCount; i++)
+        for (int i = 0; i < collectedFishColors.Count; i++)
         {
             mappedColors[i] = ColorHexLocalization.ToIndonesian(collectedFishColors[i]);
         }
 
         resultCorrectFishText.text =
-            correctHitCount > 0 ? string.Join(", ", mappedColors) : "Tidak ada ikan dikumpulkan";
+            collectedFishColors.Count > 0 ? string.Join(", ", mappedColors) : "Tidak ada ikan dikumpulkan";
 
         UpdateTierStars();
 
@@ -173,22 +185,25 @@ public class GameManager : MonoBehaviour
         scoreText.text = score.ToString();
     }
 
-    void UpdateTimerUI()
-    {
-        float normalized = Mathf.Clamp01(timer / gameDuration);
-        timerBarFill.fillAmount = normalized;
-    }
-
     public void PickNewTarget()
     {
-        // randomize target color
         int i = Random.Range(0, fishColorOptions.Length);
         targetColor = fishColorOptions[i];
 
-        // set UI target image
         targetColorImage.color = targetColor;
-        // spawn fish with target color
+
+        fishSpawner.fishCount = FishCountForDifficulty(correctHitCount);
         fishSpawner.SpawnFish(targetColor);
+    }
+
+    // Scales fish count with player progress
+    int FishCountForDifficulty(int correct)
+    {
+        if (correct >= 15) return 7;
+        if (correct >= 10) return 6;
+        if (correct >= 6)  return 5;
+        if (correct >= 3)  return 4;
+        return 3;
     }
 
     public void OnFishHit(Color fishColor)
@@ -197,33 +212,49 @@ public class GameManager : MonoBehaviour
 
         if (correct)
         {
-            score += pointPerCorrectHit;
-            correctHitCount++;
-            ShowHappy();
-            AudioManager.I.PlayCorrect();
+            comboStreak++;
+            int multiplier = ComboMultiplier(comboStreak);
+            int earned = pointPerCorrectHit * multiplier;
 
-            collectedFishColors[correctHitCount - 1] = ColorUtility.ToHtmlStringRGB(fishColor);
+            score += earned;
+            correctHitCount++;
+
+            collectedFishColors.Add(ColorUtility.ToHtmlStringRGB(fishColor));
+
+            ShowHappy(earned, multiplier);
+            AudioManager.I.PlayCorrect();
         }
         else
         {
+            comboStreak = 0;
             score -= penaltyPerWrongHit;
+            score = Mathf.Max(0, score);
             ShowSad();
             AudioManager.I.PlayWrong();
         }
 
         UpdateScoreUI();
 
-        // 🔒 LOCK THROW + DELAY
         if (spearThrower)
             spearThrower.LockThrow(hitDelay);
 
         Invoke(nameof(PickNewTarget), hitDelay + 0.8f);
     }
 
-    void ShowHappy()
+    // Returns score multiplier for the current streak
+    int ComboMultiplier(int streak)
+    {
+        if (streak >= 5) return 3;
+        if (streak >= 3) return 2;
+        return 1;
+    }
+
+    void ShowHappy(int earned, int multiplier)
     {
         happyFeedback.SetActive(true);
-        happyFeedbackText.text = $"+{pointPerCorrectHit}!";
+        happyFeedbackText.text = multiplier > 1
+            ? $"x{multiplier} COMBO! +{earned}!"
+            : $"+{earned}!";
         Invoke(nameof(HideFeedback), 1f);
     }
 
@@ -246,6 +277,8 @@ public class GameManager : MonoBehaviour
         TierLow.gameObject.SetActive(false);
         TierMid.gameObject.SetActive(false);
         TierHigh.gameObject.SetActive(false);
+        if (TierLegend != null)
+            TierLegend.gameObject.SetActive(false);
     }
 
     void UpdateTierStars()
@@ -256,12 +289,14 @@ public class GameManager : MonoBehaviour
 
         if (correctHitCount <= 0)
             activeTier = TierEmpty;
-        else if (correctHitCount <= 2)
-            activeTier = TierLow;
         else if (correctHitCount <= 4)
+            activeTier = TierLow;
+        else if (correctHitCount <= 9)
             activeTier = TierMid;
-        else
+        else if (correctHitCount <= 14)
             activeTier = TierHigh;
+        else
+            activeTier = TierLegend != null ? TierLegend : TierHigh;
 
         activeTier.gameObject.SetActive(true);
 
@@ -280,7 +315,6 @@ public class GameManager : MonoBehaviour
 
         float t = 0f;
 
-        // scale up
         while (t < duration)
         {
             t += Time.unscaledDeltaTime;
@@ -290,7 +324,6 @@ public class GameManager : MonoBehaviour
 
         t = 0f;
 
-        // scale down
         while (t < duration)
         {
             t += Time.unscaledDeltaTime;
@@ -309,13 +342,11 @@ public class GameManager : MonoBehaviour
 
         while (gameRunning)
         {
-            // merah + scale up
             timerBarFill.color = timerWarningColor;
             yield return StartCoroutine(
                 ScaleLerp(timerBarFill.transform, normalScale, pulseScale, pulseDuration * 0.5f)
             );
 
-            // normal + scale down
             timerBarFill.color = timerNormalColor;
             yield return StartCoroutine(
                 ScaleLerp(timerBarFill.transform, pulseScale, normalScale, pulseDuration * 0.5f)
