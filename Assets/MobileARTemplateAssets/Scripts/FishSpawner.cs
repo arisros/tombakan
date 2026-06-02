@@ -68,7 +68,8 @@ public class FishSpawner : MonoBehaviour
                 : fishPrefab;
 
             GameObject fish = Instantiate(prefabToUse, pos, Quaternion.identity);
-            fish.AddComponent<FishSwim>().horizontalRadius = spawnRadius;
+            var swim = fish.GetComponent<FishSwim>() ?? fish.AddComponent<FishSwim>();
+            swim.horizontalRadius = spawnRadius;
 
             ApplyColor(fish, fishColor);
 

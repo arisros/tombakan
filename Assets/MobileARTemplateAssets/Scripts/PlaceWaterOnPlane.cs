@@ -34,6 +34,7 @@ public class PlaceWaterOnPlane : MonoBehaviour
             waterPlane.SetActive(true);
 
             DisableARPlanes();
+            enabled = false; // one-shot placement; prevents mid-game re-positioning
         }
     }
 
