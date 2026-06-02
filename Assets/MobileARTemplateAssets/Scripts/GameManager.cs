@@ -31,6 +31,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Target Color UI")]
     public Image targetColorImage;
+    public TMP_Text targetColorLabel; // optional / null-safe — Indonesian colour word
 
     [Header("Spear")]
     public SpearThrower spearThrower;
@@ -47,6 +48,7 @@ public class GameManager : MonoBehaviour
     public GameObject resultContainer;
     public TMP_Text resultScoreText;
     public TMP_Text resultCorrectFishText;
+    public TMP_Text resultAccuracyText; // optional / null-safe — e.g. "9/12 (75%)"
 
     public Image TierEmpty;
     public Image TierLow;
@@ -70,6 +72,9 @@ public class GameManager : MonoBehaviour
 
     // Combo streak
     int comboStreak;
+
+    // Wrong hits this game (for accuracy stat)
+    int wrongHitCount;
 
     // Collected fish colors for result screen
     List<string> collectedFishColors = new List<string>();
@@ -134,6 +139,7 @@ public class GameManager : MonoBehaviour
         // RESET STATE
         score = 0;
         correctHitCount = 0;
+        wrongHitCount = 0;
         comboStreak = 0;
         collectedFishColors.Clear();
 
@@ -181,6 +187,10 @@ public class GameManager : MonoBehaviour
         // Aggregated, overflow-safe colour summary (UX-07)
         resultCorrectFishText.text = ColorSummary.Format(collectedFishColors);
 
+        // Accuracy readout (UX-09)
+        if (resultAccuracyText != null)
+            resultAccuracyText.text = Accuracy.Format(correctHitCount, wrongHitCount);
+
         // Persist best score + celebrate a new record (UX-06)
         bool isRecord = ScoreStore.TrySetBest(score);
         RefreshBestScoreUI();
@@ -210,6 +220,8 @@ public class GameManager : MonoBehaviour
         targetColor = FishPalette.Options[i];
 
         targetColorImage.color = targetColor;
+        if (targetColorLabel != null)
+            targetColorLabel.text = ColorHexLocalization.ToIndonesian(targetColor);
 
         fishSpawner.fishCount = FishCountForDifficulty(correctHitCount);
         fishSpawner.SpawnFish(targetColor);
@@ -252,6 +264,7 @@ public class GameManager : MonoBehaviour
         else
         {
             comboStreak = 0;
+            wrongHitCount++;
             score = ClampScore(score - penaltyPerWrongHit);
             ShowSad();
             AudioManager.I.PlayWrong();
@@ -259,10 +272,13 @@ public class GameManager : MonoBehaviour
 
         UpdateScoreUI();
 
-        if (spearThrower)
-            spearThrower.LockThrow(hitDelay);
+        // Adaptive pacing: tighten the inter-round delay as the player improves (UX-08)
+        float delay = PacingRules.HitDelayForProgress(hitDelay, correctHitCount);
 
-        Invoke(nameof(PickNewTarget), hitDelay + 0.8f);
+        if (spearThrower)
+            spearThrower.LockThrow(delay);
+
+        Invoke(nameof(PickNewTarget), delay + 0.8f);
     }
 
     // Returns score multiplier for the current streak. Pure + static so it is unit-testable.
