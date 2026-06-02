@@ -38,7 +38,7 @@ public class FishSpawner : MonoBehaviour
             swim.horizontalRadius = spawnRadius;
 
             // warna
-            Color fishColor = (i == correctIndex) ? targetColor : RandomOtherColor(targetColor);
+            Color fishColor = (i == correctIndex) ? targetColor : FishPalette.RandomOther(targetColor);
 
             ApplyColor(fish, fishColor);
 
@@ -50,6 +50,16 @@ public class FishSpawner : MonoBehaviour
 
             spawnedFish[i] = fish;
         }
+    }
+
+    /// <summary>
+    /// Destroys every active fish. Called at end-of-game so the last shoal does not
+    /// keep swimming behind the result screen (Week 2 BUG-04).
+    /// </summary>
+    public void ClearAll()
+    {
+        ClearFish();
+        spawnedFish = null;
     }
 
     void ClearFish()
@@ -71,15 +81,4 @@ public class FishSpawner : MonoBehaviour
             renderer.material.color = color;
     }
 
-    Color RandomOtherColor(Color target)
-    {
-        Color[] colors = { Color.red, Color.green, Color.blue };
-        Color c;
-        do
-        {
-            c = colors[Random.Range(0, colors.Length)];
-        } while (c == target);
-
-        return c;
-    }
 }

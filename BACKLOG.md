@@ -2,6 +2,12 @@
 
 ## Completed
 
+### Week 2
+- [x] Centralise + expand fish-colour palette (FishPalette, +Kuning) — fixes palette drift bug
+- [x] Clear fish on game end (no shoal behind result screen)
+- [x] High-score persistence (PlayerPrefs) + new-record badge
+- [x] Aggregated, overflow-safe result colour summary
+
 ### Week 1
 - [x] Score floor — prevent negative score display
 - [x] Combo streak multiplier (2× / 3×)
@@ -18,7 +24,7 @@
 ### High Priority
 - [ ] **Add `UNITY_LICENSE` repo secret** (+ `UNITY_EMAIL`/`UNITY_PASSWORD`) so CI test/build jobs actually run instead of skipping
 - [ ] C# lint in CI (`dotnet format --verify-no-changes`) — requires generating `.csproj` via Unity in-container first; follow-up to the test-runner job
-- [ ] Expand colour vocabulary — use more of the 20 colours in `Dict.cs` (currently only Red/Green/Blue)
+- [ ] Expand colour vocabulary further (4 of 20 in use after Week 2; Dict.cs supports more) — use more of the 20 colours in `Dict.cs` (currently only Red/Green/Blue)
 - [ ] Remove orphaned `FishHit.cs` (never called; `FishHitBox` handles all hit logic)
 - [ ] Colour-blind accessibility — add shape/symbol overlays to fish in addition to colour
 
