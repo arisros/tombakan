@@ -8,15 +8,26 @@ public class FishSpawner : MonoBehaviour
     [HideInInspector] public int fishCount = 3;
     public float spawnRadius = 1.5f;
 
-    private readonly float minDepth = -0.3f;
-    private readonly float maxDepth = -0.1f;
+    [Header("Species System (Phase 1)")]
+    public FishCatalog catalog; // assign in Inspector; null = colour-only mode
 
-    // simpan ikan aktif
-    private GameObject[] spawnedFish;
+    readonly float minDepth = -0.3f;
+    readonly float maxDepth = -0.1f;
+
+    GameObject[] spawnedFish;
+
+    // --- Current target species (set per round when using catalog) ---
+    public FishSpecies CurrentTargetSpecies { get; private set; }
 
     public void SpawnFish(Color targetColor, int activeColorCount)
     {
         ClearFish();
+
+        // When a catalog is assigned, pick a target species from it
+        FishSpecies targetSpecies = catalog != null ? catalog.PickRandom() : null;
+        CurrentTargetSpecies = targetSpecies;
+
+        Color resolvedTargetColor = targetSpecies != null ? targetSpecies.baseColor : targetColor;
 
         spawnedFish = new GameObject[fishCount];
         int correctIndex = Random.Range(0, fishCount);
@@ -31,49 +42,60 @@ public class FishSpawner : MonoBehaviour
                     Random.Range(-spawnRadius, spawnRadius)
                 );
 
-            GameObject fish = Instantiate(fishPrefab, pos, Quaternion.identity);
+            FishSpecies spawnSpecies;
+            Color fishColor;
 
-            // movement
-            FishSwim swim = fish.AddComponent<FishSwim>();
-            swim.horizontalRadius = spawnRadius;
+            if (i == correctIndex)
+            {
+                spawnSpecies = targetSpecies;
+                fishColor    = resolvedTargetColor;
+            }
+            else if (catalog != null)
+            {
+                spawnSpecies = catalog.PickOther(targetSpecies);
+                fishColor    = spawnSpecies != null ? spawnSpecies.baseColor
+                                                    : FishPalette.RandomOther(resolvedTargetColor, activeColorCount);
+            }
+            else
+            {
+                spawnSpecies = null;
+                fishColor    = FishPalette.RandomOther(targetColor, activeColorCount);
+            }
 
-            // warna
-            Color fishColor = (i == correctIndex)
-                ? targetColor
-                : FishPalette.RandomOther(targetColor, activeColorCount);
+            // Use species prefab if available, otherwise fall back to default fishPrefab
+            GameObject prefabToUse = (spawnSpecies?.modelPrefab != null)
+                ? spawnSpecies.modelPrefab
+                : fishPrefab;
+
+            GameObject fish = Instantiate(prefabToUse, pos, Quaternion.identity);
+            fish.AddComponent<FishSwim>().horizontalRadius = spawnRadius;
 
             ApplyColor(fish, fishColor);
 
-            // kasih info ke fish
             FishTarget ft = fish.GetComponent<FishTarget>();
-
             if (ft != null)
-                ft.fishColor = fishColor;
+            {
+                ft.fishColor  = fishColor;
+                ft.speciesId  = spawnSpecies != null ? spawnSpecies.id : "";
+            }
 
             spawnedFish[i] = fish;
         }
     }
 
-    /// <summary>
-    /// Destroys every active fish. Called at end-of-game so the last shoal does not
-    /// keep swimming behind the result screen (Week 2 BUG-04).
-    /// </summary>
+    /// <summary>Destroys every active fish. Called at end-of-game (BUG-04).</summary>
     public void ClearAll()
     {
         ClearFish();
         spawnedFish = null;
+        CurrentTargetSpecies = null;
     }
 
     void ClearFish()
     {
-        if (spawnedFish == null)
-            return;
-
+        if (spawnedFish == null) return;
         foreach (var fish in spawnedFish)
-        {
-            if (fish)
-                Destroy(fish);
-        }
+            if (fish) Destroy(fish);
     }
 
     void ApplyColor(GameObject fish, Color color)
@@ -82,5 +104,4 @@ public class FishSpawner : MonoBehaviour
         if (renderer)
             renderer.material.color = color;
     }
-
 }

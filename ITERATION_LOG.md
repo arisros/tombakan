@@ -1,5 +1,36 @@
 # Iteration Log
 
+## Phase 1 + 2 + 2.5 — 2026-06-02
+
+**Branch:** `master` (direct)
+**Tasks completed:** 17 new files, 6 modified
+
+### Summary
+Implemented all three roadmap systems in one pass — Fish Species + Fishipedia (Phase 1),
+Spear Cosmetics + Shop (Phase 2), Leveling & Progression (Phase 2.5) — plus CI fix.
+
+| Task | Description | Files |
+|------|-------------|-------|
+| P0   | Fix CI `main`→`master` branch mismatch | `.github/workflows/ci.yml` |
+| P1-A | `FishSpecies` ScriptableObject + `FishRarity` enum | `FishSpecies.cs` (new) |
+| P1-B | `FishCatalog` ScriptableObject with weighted random + PickOther | `FishCatalog.cs` (new) |
+| P1-C | `FishdexStore` persistent species unlock | `FishdexStore.cs` (new) |
+| P1-D | Species-aware `FishTarget`, `FishHitBox`, `SpearHit` | 3 files modified |
+| P1-E | Species-driven `FishSpawner` (catalog optional; null = colour-only) | `FishSpawner.cs` modified |
+| P2-A | `SpearSkin` ScriptableObject + `SpearCurrency` enum | `SpearSkin.cs` (new) |
+| P2-B | `SpearShopCatalog` ScriptableObject | `SpearShopCatalog.cs` (new) |
+| P2-C | `CurrencyStore` (soft coins) with pure earn rule | `CurrencyStore.cs` (new) |
+| P2-D | `SpearStore` ownership/equip with idempotent buy | `SpearStore.cs` (new) |
+| P25-A| `ProgressionRules` pure XP/level curve (testable) | `ProgressionRules.cs` (new) |
+| P25-B| `ProgressionStore` persistent XP+level | `ProgressionStore.cs` (new) |
+| P25-C| `LevelReward` + `LevelRewardTable` ScriptableObject | 2 files (new) |
+| P25-D| `GameManager` — species tracking, XP award, level-up, coins, HUD | `GameManager.cs` modified |
+| T-1  | `Phase1Tests` — FishdexStore pure logic, catalog weights (12 tests) | `Tests/Phase1Tests.cs` (new) |
+| T-2  | `Phase2Tests` — SpearStore + CurrencyStore pure logic (11 tests) | `Tests/Phase2Tests.cs` (new) |
+| T-25 | `Phase25Tests` — ProgressionRules XP/level curve (22 tests) | `Tests/Phase25Tests.cs` (new) |
+
+
+
 ## Week 4 — 2026-06-02
 
 **Branch:** `iteration/week-4`  
