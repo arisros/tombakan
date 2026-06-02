@@ -196,14 +196,20 @@ public class GameManager : MonoBehaviour
         fishSpawner.SpawnFish(targetColor);
     }
 
-    // Scales fish count with player progress
-    int FishCountForDifficulty(int correct)
+    // Scales fish count with player progress. Pure + static so it is unit-testable.
+    public static int FishCountForDifficulty(int correct)
     {
         if (correct >= 15) return 7;
         if (correct >= 10) return 6;
         if (correct >= 6)  return 5;
         if (correct >= 3)  return 4;
         return 3;
+    }
+
+    // Clamps score to a non-negative floor. Pure + static so it is unit-testable.
+    public static int ClampScore(int rawScore)
+    {
+        return Mathf.Max(0, rawScore);
     }
 
     public void OnFishHit(Color fishColor)
@@ -227,8 +233,7 @@ public class GameManager : MonoBehaviour
         else
         {
             comboStreak = 0;
-            score -= penaltyPerWrongHit;
-            score = Mathf.Max(0, score);
+            score = ClampScore(score - penaltyPerWrongHit);
             ShowSad();
             AudioManager.I.PlayWrong();
         }
@@ -241,8 +246,8 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(PickNewTarget), hitDelay + 0.8f);
     }
 
-    // Returns score multiplier for the current streak
-    int ComboMultiplier(int streak)
+    // Returns score multiplier for the current streak. Pure + static so it is unit-testable.
+    public static int ComboMultiplier(int streak)
     {
         if (streak >= 5) return 3;
         if (streak >= 3) return 2;
@@ -281,22 +286,29 @@ public class GameManager : MonoBehaviour
             TierLegend.gameObject.SetActive(false);
     }
 
+    // Maps correct-hit count to a tier index. Pure + static so it is unit-testable.
+    // 0 = Empty, 1 = Low, 2 = Mid, 3 = High, 4 = Legend
+    public static int TierIndex(int correctHitCount)
+    {
+        if (correctHitCount <= 0)  return 0;
+        if (correctHitCount <= 4)  return 1;
+        if (correctHitCount <= 9)  return 2;
+        if (correctHitCount <= 14) return 3;
+        return 4;
+    }
+
     void UpdateTierStars()
     {
         ResetTierStars();
 
-        Image activeTier;
-
-        if (correctHitCount <= 0)
-            activeTier = TierEmpty;
-        else if (correctHitCount <= 4)
-            activeTier = TierLow;
-        else if (correctHitCount <= 9)
-            activeTier = TierMid;
-        else if (correctHitCount <= 14)
-            activeTier = TierHigh;
-        else
-            activeTier = TierLegend != null ? TierLegend : TierHigh;
+        Image activeTier = TierIndex(correctHitCount) switch
+        {
+            0 => TierEmpty,
+            1 => TierLow,
+            2 => TierMid,
+            3 => TierHigh,
+            _ => TierLegend != null ? TierLegend : TierHigh,
+        };
 
         activeTier.gameObject.SetActive(true);
 

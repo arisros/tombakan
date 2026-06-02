@@ -8,12 +8,16 @@
 - [x] Dynamic fish count difficulty ramp (3→7)
 - [x] Numeric timer countdown text field
 - [x] Raised tier thresholds + TierLegend
+- [x] CI/CD — GitHub Actions: EditMode test runner + Android build (game-ci)
+- [x] Assembly definitions (`Tombakan.Runtime` + `Tombakan.Tests`) so tests are discoverable
 
 ---
 
 ## Open
 
 ### High Priority
+- [ ] **Add `UNITY_LICENSE` repo secret** (+ `UNITY_EMAIL`/`UNITY_PASSWORD`) so CI test/build jobs actually run instead of skipping
+- [ ] C# lint in CI (`dotnet format --verify-no-changes`) — requires generating `.csproj` via Unity in-container first; follow-up to the test-runner job
 - [ ] Expand colour vocabulary — use more of the 20 colours in `Dict.cs` (currently only Red/Green/Blue)
 - [ ] Remove orphaned `FishHit.cs` (never called; `FishHitBox` handles all hit logic)
 - [ ] Colour-blind accessibility — add shape/symbol overlays to fish in addition to colour
