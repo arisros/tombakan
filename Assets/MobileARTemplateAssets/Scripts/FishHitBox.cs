@@ -8,19 +8,14 @@ public class FishHitBox : MonoBehaviour
 
     bool isHit;
 
-    public void OnHit(Color fishColor, Transform spear)
+    public void OnHit(Color fishColor, string speciesId, Transform spear)
     {
-        if (isHit)
-            return;
+        if (isHit) return;
         isHit = true;
 
-        // scoring
-        GameManager.I.OnFishHit(fishColor);
+        GameManager.I.OnFishHit(fishColor, speciesId);
 
-        // stick spear
         StickSpear(spear);
-
-        // delay destroy
         StartCoroutine(DestroyAfterDelay());
     }
 

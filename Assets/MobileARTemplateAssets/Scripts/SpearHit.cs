@@ -19,14 +19,13 @@ public class SpearHit : MonoBehaviour
 
         foreach (var hit in hits)
         {
-            FishHitBox fish = hit.GetComponentInParent<FishHitBox>();
-            FishTarget target = hit.GetComponentInParent<FishTarget>();
+            FishHitBox fishHitBox = hit.GetComponentInParent<FishHitBox>();
+            FishTarget target     = hit.GetComponentInParent<FishTarget>();
 
-            if (fish != null && target != null)
+            if (fishHitBox != null && target != null)
             {
                 hasHit = true;
-
-                fish.OnHit(target.fishColor, transform);
+                fishHitBox.OnHit(target.fishColor, target.speciesId, transform);
                 break;
             }
         }
