@@ -1,0 +1,24 @@
+{
+    "name": "Tombakan.Runtime",
+    "rootNamespace": "",
+    "references": [
+        "Unity.TextMeshPro",
+        "UnityEngine.UI",
+        "Unity.InputSystem",
+        "Unity.Mathematics",
+        "Unity.XR.CoreUtils",
+        "Unity.XR.ARFoundation",
+        "Unity.XR.Interaction.Toolkit",
+        "Unity.XR.Interaction.Toolkit.Samples.StarterAssets",
+        "Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

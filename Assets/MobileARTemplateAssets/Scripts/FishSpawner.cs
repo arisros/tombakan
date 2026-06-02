@@ -5,7 +5,7 @@ public class FishSpawner : MonoBehaviour
     public GameObject fishPrefab;
     public Transform waterPlane;
 
-    public int fishCount = 5;
+    [HideInInspector] public int fishCount = 3;
     public float spawnRadius = 1.5f;
 
     private readonly float minDepth = -0.3f;
