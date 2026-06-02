@@ -54,12 +54,16 @@ public class GameManager : MonoBehaviour
     public Image TierHigh;
     public Image TierLegend;
 
+    [Header("Best Score UI (all optional / null-safe)")]
+    public TMP_Text bestScoreText;        // main screen
+    public TMP_Text resultBestScoreText;  // result screen
+    public GameObject newRecordBadge;     // shown on the result screen when a record is set
+
     [Header("Fish Managers")]
     public FishSpawner fishSpawner;
 
-    // Target color internal
+    // Target color internal — palette lives in FishPalette (single source of truth)
     Color targetColor;
-    Color[] fishColorOptions = { Color.green, Color.red, Color.blue };
 
     int pointPerCorrectHit = 100;
     int penaltyPerWrongHit = 25;
@@ -83,6 +87,16 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         AudioManager.I.PlayMainBGM();
+        RefreshBestScoreUI();
+    }
+
+    void RefreshBestScoreUI()
+    {
+        int best = ScoreStore.GetBest();
+        if (bestScoreText != null)
+            bestScoreText.text = best.ToString();
+        if (resultBestScoreText != null)
+            resultBestScoreText.text = best.ToString();
     }
 
     void Update()
@@ -143,6 +157,8 @@ public class GameManager : MonoBehaviour
             timerCountdownText.text = Mathf.CeilToInt(gameDuration).ToString();
 
         resultContainer.SetActive(false);
+        if (newRecordBadge != null)
+            newRecordBadge.SetActive(false);
 
         UpdateScoreUI();
         PickNewTarget();
@@ -153,20 +169,23 @@ public class GameManager : MonoBehaviour
 
     void EndGame()
     {
+        // Stop the last shoal swimming behind the result screen (BUG-04)
+        if (fishSpawner != null)
+            fishSpawner.ClearAll();
+
         resultContainer.SetActive(true);
         resultScoreText.text = score.ToString();
 
         AudioManager.I.PlayEnd();
 
-        string[] mappedColors = new string[collectedFishColors.Count];
+        // Aggregated, overflow-safe colour summary (UX-07)
+        resultCorrectFishText.text = ColorSummary.Format(collectedFishColors);
 
-        for (int i = 0; i < collectedFishColors.Count; i++)
-        {
-            mappedColors[i] = ColorHexLocalization.ToIndonesian(collectedFishColors[i]);
-        }
-
-        resultCorrectFishText.text =
-            collectedFishColors.Count > 0 ? string.Join(", ", mappedColors) : "Tidak ada ikan dikumpulkan";
+        // Persist best score + celebrate a new record (UX-06)
+        bool isRecord = ScoreStore.TrySetBest(score);
+        RefreshBestScoreUI();
+        if (newRecordBadge != null)
+            newRecordBadge.SetActive(isRecord);
 
         UpdateTierStars();
 
@@ -187,8 +206,8 @@ public class GameManager : MonoBehaviour
 
     public void PickNewTarget()
     {
-        int i = Random.Range(0, fishColorOptions.Length);
-        targetColor = fishColorOptions[i];
+        int i = Random.Range(0, FishPalette.Options.Length);
+        targetColor = FishPalette.Options[i];
 
         targetColorImage.color = targetColor;
 
