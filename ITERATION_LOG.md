@@ -1,5 +1,25 @@
 # Iteration Log
 
+## Week 4 — 2026-06-02
+
+**Branch:** `iteration/week-4`  
+**Tasks completed:** 4
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| TASK-01 | Audio robustness (null-guards) + persisted mute API | `AudioManager.cs`, `AudioPrefs.cs` (new) |
+| TASK-02 | Progressive colour difficulty (3 → 4 colours with progress) | `FishPalette.cs`, `GameManager.cs`, `FishSpawner.cs` |
+| TASK-03 | Combo-scaled time bonus + reactive timer warning (fixes stuck-pulse) | `TimeBonus.cs` (new), `GameManager.cs` |
+| TASK-04 | Removed verified-dead `FishIdentity.cs` + `FishHit.cs` | (deletions) |
+
+**Note:** Dead-code removal was GUID-verified against all scenes/prefabs/scripts before
+deletion. Mute HUD button left as scene work; runtime API shipped.
+
+**Artefacts:** `TESTER_REPORT_week4.md`, `ITERATION_week4_SCOPE.md`,
+`TESTER_RECHECK_week4.md`, `Assets/.../Tests/Week4Tests.cs`
+
+---
+
 ## Week 3 — 2026-06-02
 
 **Branch:** `iteration/week-3`  
