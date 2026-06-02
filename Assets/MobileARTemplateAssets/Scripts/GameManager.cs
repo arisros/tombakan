@@ -11,6 +11,7 @@ public class GameManager : MonoBehaviour
     public int score;
     public int correctHitCount;
     public float gameDuration = 60f;
+    public GameMode currentMode = GameMode.Standard;
 
     [Header("UI Screens")]
     public GameObject mainScreenUI;
@@ -77,6 +78,9 @@ public class GameManager : MonoBehaviour
     [Header("Data")]
     public LevelRewardTable levelRewardTable;
 
+    [Header("Achievements (optional/null-safe)")]
+    [SerializeField] AchievementCatalog achievementCatalog;
+
     // --- Internal state ---
 
     Color targetColor;
@@ -87,6 +91,10 @@ public class GameManager : MonoBehaviour
     int comboStreak;
     int maxComboStreak;
     int wrongHitCount;
+
+    // --- Public read-only accessors for AchievementChecker ---
+    public int MaxComboStreak => maxComboStreak;
+    public int WrongHitCount  => wrongHitCount;
 
     List<string> collectedFishColors = new List<string>();
 
@@ -137,6 +145,13 @@ public class GameManager : MonoBehaviour
     {
         if (!gameRunning) return;
 
+        if (currentMode == GameMode.Zen)
+        {
+            // Zen mode: no countdown, no auto-end; timer bar stays full
+            timerBarFill.fillAmount = 1f;
+            return;
+        }
+
         timeLeft -= Time.unscaledDeltaTime;
 
         timerBarFill.fillAmount = Mathf.Clamp01(timeLeft / gameDuration);
@@ -159,6 +174,17 @@ public class GameManager : MonoBehaviour
             gameRunning = false;
             EndGame();
         }
+    }
+
+    /// <summary>
+    /// Ends the game on demand. Intended for Zen mode where there is no countdown,
+    /// so a UI button calls this instead of the timer expiring automatically.
+    /// </summary>
+    public void EndGameManual()
+    {
+        if (!gameRunning) return;
+        gameRunning = false;
+        EndGame();
     }
 
     void StopTimerWarning()
@@ -188,7 +214,7 @@ public class GameManager : MonoBehaviour
         collectedFishColors.Clear();
         newSpeciesThisGame.Clear();
 
-        timeLeft    = gameDuration;
+        timeLeft    = currentMode == GameMode.Zen ? float.MaxValue : gameDuration;
         gameRunning = true;
 
         timerWarningActive = false;
@@ -203,7 +229,9 @@ public class GameManager : MonoBehaviour
         timerBarFill.transform.localScale = Vector3.one;
 
         if (timerCountdownText != null)
-            timerCountdownText.text = Mathf.CeilToInt(gameDuration).ToString();
+            timerCountdownText.text = currentMode == GameMode.Zen
+                ? "--"
+                : Mathf.CeilToInt(gameDuration).ToString();
 
         resultContainer.SetActive(false);
         if (newRecordBadge != null) newRecordBadge.SetActive(false);
@@ -254,6 +282,14 @@ public class GameManager : MonoBehaviour
         // Grant level rewards
         if (newLevel > 0 && levelRewardTable != null)
             ApplyLevelReward(levelRewardTable.GetRewardForLevel(newLevel));
+
+        // --- Achievements ---
+        if (achievementCatalog != null)
+        {
+            string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
+            foreach (string id in newlyUnlocked)
+                Debug.Log($"[Tombakan] Achievement unlocked: {id}");
+        }
 
         if (timerPulseRoutine != null)
         {
@@ -326,6 +362,8 @@ public class GameManager : MonoBehaviour
             targetSpeciesLabel.text = currentTarget != null ? currentTarget.displayName : "";
 
         fishSpawner.fishCount = FishCountForDifficulty(correctHitCount);
+        // TODO (Zen mode): pass a speed multiplier of 0.5f when currentMode == GameMode.Zen
+        // once FishSpawner.SpawnFish accepts a speedMultiplier parameter.
         fishSpawner.SpawnFish(targetColor, activeColors);
 
         // Update targetColorImage with actual species colour when catalog is active
