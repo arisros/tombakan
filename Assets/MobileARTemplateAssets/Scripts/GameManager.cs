@@ -116,10 +116,16 @@ public class GameManager : MonoBehaviour
         if (timerCountdownText != null)
             timerCountdownText.text = Mathf.CeilToInt(Mathf.Max(0f, timeLeft)).ToString();
 
+        // Reactive timer warning: a time bonus (UX-13) can push time back above the
+        // threshold, so the pulse must be able to turn off again, not just on.
         if (timeLeft <= warningTimeThreshold && !timerWarningActive)
         {
             timerWarningActive = true;
             timerPulseRoutine = StartCoroutine(TimerPulseWarning());
+        }
+        else if (timeLeft > warningTimeThreshold && timerWarningActive)
+        {
+            StopTimerWarning();
         }
 
         if (timeLeft <= 0f)
@@ -127,6 +133,18 @@ public class GameManager : MonoBehaviour
             gameRunning = false;
             EndGame();
         }
+    }
+
+    void StopTimerWarning()
+    {
+        timerWarningActive = false;
+        if (timerPulseRoutine != null)
+        {
+            StopCoroutine(timerPulseRoutine);
+            timerPulseRoutine = null;
+        }
+        timerBarFill.color = timerNormalColor;
+        timerBarFill.transform.localScale = Vector3.one;
     }
 
     public void StartGame()
@@ -216,15 +234,17 @@ public class GameManager : MonoBehaviour
 
     public void PickNewTarget()
     {
-        int i = Random.Range(0, FishPalette.Options.Length);
-        targetColor = FishPalette.Options[i];
+        // Colour palette widens with progress (UX-12); pick the target from the active subset.
+        int activeColors = FishPalette.CountForProgress(correctHitCount);
+        Color[] active = FishPalette.ActiveOptions(activeColors);
+        targetColor = active[Random.Range(0, active.Length)];
 
         targetColorImage.color = targetColor;
         if (targetColorLabel != null)
             targetColorLabel.text = ColorHexLocalization.ToIndonesian(targetColor);
 
         fishSpawner.fishCount = FishCountForDifficulty(correctHitCount);
-        fishSpawner.SpawnFish(targetColor);
+        fishSpawner.SpawnFish(targetColor, activeColors);
     }
 
     // Scales fish count with player progress. Pure + static so it is unit-testable.
@@ -255,6 +275,9 @@ public class GameManager : MonoBehaviour
 
             score += earned;
             correctHitCount++;
+
+            // Reward the streak with a little extra time (UX-13)
+            timeLeft += TimeBonus.ForHit(comboStreak);
 
             collectedFishColors.Add(ColorUtility.ToHtmlStringRGB(fishColor));
 
