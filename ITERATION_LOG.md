@@ -1,5 +1,22 @@
 # Iteration Log
 
+## Week 3 — 2026-06-02
+
+**Branch:** `iteration/week-3`  
+**Tasks completed:** 4
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| TASK-01 | Target colour name label (accessibility + vocabulary) | `GameManager.cs` |
+| TASK-02 | Adaptive inter-round delay (shrinks with skill, 1.0 s floor) | `PacingRules.cs` (new), `GameManager.cs` |
+| TASK-03 | Accuracy stat on result screen ("9/12 (75%)") | `Accuracy.cs` (new), `GameManager.cs` |
+| TASK-04 | `WaterRipple` null-guard — kills NRE spam | `WaterRipple.cs` |
+
+**Artefacts:** `TESTER_REPORT_week3.md`, `ITERATION_week3_SCOPE.md`,
+`TESTER_RECHECK_week3.md`, `Assets/.../Tests/Week3Tests.cs`
+
+---
+
 ## Week 2 — 2026-06-02
 
 **Branch:** `iteration/week-2`  
