@@ -14,7 +14,7 @@ public class FishSpawner : MonoBehaviour
     // simpan ikan aktif
     private GameObject[] spawnedFish;
 
-    public void SpawnFish(Color targetColor)
+    public void SpawnFish(Color targetColor, int activeColorCount)
     {
         ClearFish();
 
@@ -38,7 +38,9 @@ public class FishSpawner : MonoBehaviour
             swim.horizontalRadius = spawnRadius;
 
             // warna
-            Color fishColor = (i == correctIndex) ? targetColor : FishPalette.RandomOther(targetColor);
+            Color fishColor = (i == correctIndex)
+                ? targetColor
+                : FishPalette.RandomOther(targetColor, activeColorCount);
 
             ApplyColor(fish, fishColor);
 
