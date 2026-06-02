@@ -20,6 +20,7 @@ Three pillars:
 |--------|-------------------|----------------|
 | **Learn** | Identify the fish you spear (colour → species name + picture) | The educational core; differentiates from generic tap games |
 | **Collect** | A "Fishipedia" of caught species with names + facts | Retention + reinforces learning |
+| **Progress** | A persistent **player level** that unlocks content and sets long-term goals | The meta-backbone tying play → learning → rewards |
 | **Customise** | Cosmetic spear skins earned/bought | Engagement + (ethical) monetisation |
 
 ---
@@ -49,6 +50,9 @@ Three pillars:
 - [ ] Confirm the project compiles in Unity (first real CI run validates the asmdef refs).
 - [ ] Establish a real playtest path (local build / screenshots) to replace simulated reports.
 
+Detailed specs: `docs/specs/fish-species-system.md`,
+`docs/specs/spear-cosmetics-system.md`, `docs/specs/leveling-system.md`.
+
 ### Phase 1 — Fish Species System + Fishipedia *(educational core)*
 See `docs/specs/fish-species-system.md`.
 - [ ] `FishSpecies` ScriptableObject + catalog.
@@ -62,14 +66,22 @@ See `docs/specs/spear-cosmetics-system.md`.
 - [ ] Soft currency earned by play; shop + equip UI; parental gate.
 - [ ] `SpearThrower` uses the equipped skin. Optional Unity IAP scaffold.
 
+### Phase 2.5 — Leveling & Progression *(meta-backbone — buildable in parallel)*
+See `docs/specs/leveling-system.md`.
+- [ ] Persistent player XP + level (`ProgressionStore`), pure XP/level curve.
+- [ ] XP awarded at end-of-game; level-up detection + celebration.
+- [ ] Level reward table → unlocks species / spear skins / currency / modes.
+- [ ] XP bar + level badge on HUD/main/result; tests for curve, boundaries, rewards.
+- Built data-driven against placeholders; rewards point at Phase 1/2 content as it lands.
+
 ### Phase 3 — Art & juice pass *(visible quality)*
 - [ ] Implement the UI redesign (`design/tombakan_ui_v0.svg`) in Unity.
 - [ ] Real low-poly species models + spear skins (free packs / generative 3D / artist).
 - [ ] Shader/particle juice: water, "caught" dissolve/flop, splash, screen-shake, haptics.
 
-### Phase 4 — Progression & retention
-- [ ] Modes beyond the single 60 s round (zen / challenge / level packs).
-- [ ] Daily challenge, achievements, persistent tier/stars.
+### Phase 4 — Modes & retention
+- [ ] Modes beyond the single 60 s round (zen / challenge / **stage packs** — leveling flavour 2).
+- [ ] Daily challenge + achievements (feed XP into the Phase 2.5 leveling system).
 
 ### Phase 5 — Onboarding & accessibility
 - [ ] Streamline AR onboarding (`GoalManager`) for players who know AR placement.
