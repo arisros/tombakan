@@ -1,0 +1,17 @@
+{
+    "name": "Tombakan.Tests.E2E",
+    "rootNamespace": "",
+    "references": [
+        "Tombakan.Runtime",
+        "UnityEngine.TestRunner"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "optionalUnityReferences": ["TestAssemblies"]
+}
