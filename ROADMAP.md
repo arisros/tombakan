@@ -67,7 +67,7 @@ See `docs/specs/spear-cosmetics-system.md`.
 - [x] `CurrencyStore` soft coins with pure earn rule.
 - [x] `SpearShopUI` — shop screen with buy / equip / coin display.
 - [x] `SpearThrower` reads equipped skin prefab/material; `EnsureDefault` on Start.
-- [ ] Parental gate for premium skins (soft-currency only for v1 → safe for kids).
+- [x] Parental gate for premium skins (soft-currency only for v1) — `ParentalGate.cs` 30-day consent, `BuyResult.NeedsParentalApproval` in `SpearStore`.
 - [ ] Wire shop in Unity scene + assign skin art when available.
 
 ### Phase 2.5 — Leveling & Progression *(meta-backbone)* ✅ CODE COMPLETE
@@ -88,8 +88,8 @@ See `docs/specs/leveling-system.md`.
 
 ### Phase 4 — Modes & retention ✅ CODE COMPLETE
 - [x] `DailyChallenge` — daily bonus XP (100 + 25/streak day, capped at 7).
-- [ ] Additional game modes (zen / challenge / stage packs) — content decision needed.
-- [ ] Achievements system — hooks exist via XP/level; UI TBD.
+- [x] Zen mode implemented; Challenge/Stage packs = content decision pending.
+- [x] Achievements system — AchievementStore, AchievementChecker, catalog SO, EndGame wired.
 
 ### Phase 5 — Onboarding & accessibility ✅ CODE COMPLETE
 - [x] `TombakanOnboarding` — skips AR coaching for returning players (score/XP > 0).

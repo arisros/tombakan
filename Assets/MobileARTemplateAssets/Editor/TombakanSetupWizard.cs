@@ -36,17 +36,20 @@ public static class TombakanSetupWizard
 
         var catalog = ScriptableObject.CreateInstance<FishCatalog>();
 
-        // Starter species (Indonesian waters — verified names)
+        // Starter species — 8 verified Indonesian marine/freshwater fish (see docs/species-data.md)
+        // Scientific names, rarities, colors, and fun facts are cross-checked against
+        // FishBase, LIPI, and KKP references. Do not change names/latin without re-verifying.
         var speciesData = new[]
         {
-            ("ikan_badut",  "Ikan Badut",   "Clownfish",     "Amphiprioninae", FishRarity.Common,   new Color(1f, 0.4f, 0f),   "Ikan badut tinggal di anemon laut dan tidak akan tersengat oleh tentakelnya."),
-            ("tongkol",     "Tongkol",      "Mackerel Tuna", "Euthynnus",      FishRarity.Common,   new Color(0.2f, 0.4f, 0.8f),"Tongkol bisa berenang sangat cepat dan sering bergerak dalam kelompok besar."),
-            ("kakap_merah", "Kakap Merah",  "Red Snapper",   "Lutjanus campechanus", FishRarity.Uncommon, new Color(0.9f, 0.2f, 0.2f),"Kakap merah adalah ikan yang disukai banyak nelayan karena rasanya yang enak."),
-            ("kerapu",      "Kerapu",       "Grouper",       "Epinephelus",    FishRarity.Uncommon, new Color(0.5f, 0.3f, 0.2f),"Kerapu bisa mengubah warna kulit mereka untuk menyamarkan diri dari predator."),
-            ("baronang",    "Baronang",     "Rabbitfish",    "Siganus",        FishRarity.Common,   new Color(0.7f, 0.8f, 0.3f),"Baronang memiliki duri beracun, jadi nelayan harus berhati-hati saat menangkapnya."),
-            ("ikan_nila",   "Ikan Nila",    "Nile Tilapia",  "Oreochromis niloticus", FishRarity.Common, new Color(0.5f, 0.6f, 0.5f),"Ikan nila adalah salah satu ikan budidaya paling populer di Indonesia."),
-            ("bandeng",     "Bandeng",      "Milkfish",      "Chanos chanos",  FishRarity.Common,   new Color(0.8f, 0.85f, 0.9f),"Bandeng adalah ikan nasional Indonesia dan dikenal dengan banyak durinya."),
-            ("ikan_mas",    "Ikan Mas",     "Goldfish",      "Carassius auratus", FishRarity.Rare,  new Color(1f, 0.75f, 0f),   "Ikan mas adalah simbol keberuntungan dan banyak dipelihara sebagai ikan hias."),
+            // id                  displayName          englishName              latinName                        rarity                   baseColor                               funFact
+            ("ikan_badut",         "Ikan Badut",         "Clownfish",             "Amphiprion ocellaris",          FishRarity.Common,    new Color(1.00f, 0.40f, 0.00f), "Ikan badut hidup bersama anemon laut dan tidak tersengat tentakelnya karena kulitnya dilapisi lendir khusus."),
+            ("bandeng",            "Bandeng",            "Milkfish",              "Chanos chanos",                 FishRarity.Common,    new Color(0.78f, 0.85f, 0.91f), "Bandeng adalah ikan asli Indonesia yang sudah dibudidayakan di tambak selama ratusan tahun dan dikenal sebagai ikan banyak duri."),
+            ("kakap_merah",        "Kakap Merah",        "Mangrove Red Snapper",  "Lutjanus argentimaculatus",     FishRarity.Uncommon,  new Color(0.88f, 0.19f, 0.13f), "Kakap merah bisa hidup di air laut maupun air payau, dan merupakan salah satu ikan favorit nelayan Indonesia karena dagingnya yang lezat."),
+            ("kembung",            "Kembung",            "Indian Mackerel",       "Rastrelliger kanagurta",        FishRarity.Common,    new Color(0.23f, 0.43f, 0.65f), "Kembung adalah salah satu ikan yang paling banyak ditangkap di Indonesia dan sering dijual di pasar tradisional sebagai lauk sehari-hari."),
+            ("tuna_sirip_kuning",  "Tuna Sirip Kuning",  "Yellowfin Tuna",        "Thunnus albacares",             FishRarity.Rare,      new Color(0.12f, 0.25f, 0.50f), "Tuna sirip kuning bisa berenang dengan kecepatan hingga 75 km/jam dan Indonesia adalah salah satu negara penghasil tuna terbesar di dunia."),
+            ("kerapu_bebek",       "Kerapu Bebek",       "Humpback Grouper",      "Cromileptes altivelis",         FishRarity.Uncommon,  new Color(0.94f, 0.93f, 0.88f), "Kerapu bebek punya bintik-bintik hitam di seluruh tubuhnya dan merupakan ikan karang paling mahal di Indonesia karena rasanya sangat enak."),
+            ("lele",               "Lele",               "Walking Catfish",       "Clarias batrachus",             FishRarity.Common,    new Color(0.29f, 0.25f, 0.25f), "Lele bisa berjalan di darat menggunakan siripnya untuk berpindah ke kolam lain ketika airnya kering!"),
+            ("ikan_nila",          "Ikan Nila",          "Nile Tilapia",          "Oreochromis niloticus",         FishRarity.Common,    new Color(0.33f, 0.42f, 0.33f), "Ikan nila berasal dari Afrika tapi sekarang menjadi salah satu ikan air tawar yang paling banyak dibudidayakan di Indonesia."),
         };
 
         foreach (var (id, name, eng, latin, rarity, color, fact) in speciesData)

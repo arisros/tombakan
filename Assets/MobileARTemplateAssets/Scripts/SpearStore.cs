@@ -1,6 +1,19 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+/// <summary>Outcome of a <see cref="SpearStore.Buy(string,int,SpearCurrency)"/> call.</summary>
+public enum BuyResult
+{
+    /// <summary>Skin was not owned; purchase succeeded.</summary>
+    Success,
+    /// <summary>Skin was already owned; no charge applied.</summary>
+    AlreadyOwned,
+    /// <summary>Insufficient soft-currency coins.</summary>
+    InsufficientFunds,
+    /// <summary>Skin is premium and no active parental consent exists.</summary>
+    NeedsParentalApproval,
+}
+
 /// <summary>
 /// Persistent spear skin ownership and equip state.
 /// Pure buy/equip logic separated from storage for testability.
@@ -52,19 +65,33 @@ public static class SpearStore
 
     /// <summary>
     /// Attempts to purchase a skin. Deducts currency before writing ownership.
-    /// Returns false if already owned or insufficient funds.
+    /// Returns a <see cref="BuyResult"/> describing the outcome.
+    /// Premium skins require active parental consent via <see cref="ParentalGate"/>.
     /// </summary>
-    public static bool Buy(string id, int price, SpearCurrency currency = SpearCurrency.Coins)
+    public static BuyResult Buy(string id, int price, SpearCurrency currency = SpearCurrency.Coins)
     {
         var owned = LoadOwned();
-        if (owned.Contains(id)) return false; // already owned
+        if (owned.Contains(id)) return BuyResult.AlreadyOwned;
+
+        if (currency == SpearCurrency.Premium && !ParentalGate.HasConsent)
+            return BuyResult.NeedsParentalApproval;
 
         if (price > 0 && currency == SpearCurrency.Coins && !CurrencyStore.TrySpend(price))
-            return false; // not enough coins
+            return BuyResult.InsufficientFunds;
 
         owned.Add(id);
         SaveOwned(owned);
-        return true;
+        return BuyResult.Success;
+    }
+
+    /// <summary>
+    /// Convenience overload — reads price and currency directly from the
+    /// <see cref="SpearSkin"/> ScriptableObject.
+    /// </summary>
+    public static BuyResult Buy(SpearSkin skin)
+    {
+        if (skin == null || string.IsNullOrEmpty(skin.id)) return BuyResult.InsufficientFunds;
+        return Buy(skin.id, skin.price, skin.currency);
     }
 
     public static void Equip(string id)
