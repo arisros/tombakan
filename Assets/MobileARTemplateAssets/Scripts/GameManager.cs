@@ -378,6 +378,8 @@ public class GameManager : MonoBehaviour
 
             ShowHappy(earned, multiplier);
             if (AudioManager.I != null) AudioManager.I.PlayCorrect();
+            if (ScreenShake.I != null) ScreenShake.I.ShakeOnCorrect();
+            HapticFeedback.PlayCorrect();
         }
         else
         {
@@ -386,6 +388,8 @@ public class GameManager : MonoBehaviour
             score = ClampScore(score - penaltyPerWrongHit);
             ShowSad();
             if (AudioManager.I != null) AudioManager.I.PlayWrong();
+            if (ScreenShake.I != null) ScreenShake.I.ShakeOnWrong();
+            HapticFeedback.PlayWrong();
         }
 
         UpdateScoreUI();
