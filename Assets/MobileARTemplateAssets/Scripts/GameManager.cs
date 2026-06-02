@@ -100,6 +100,7 @@ public class GameManager : MonoBehaviour
 
     // Species tracking (Phase 1)
     HashSet<string> newSpeciesThisGame = new HashSet<string>();
+    List<string> collectedSpeciesIds   = new List<string>();
 
     float timeLeft;
     bool gameRunning;
@@ -213,6 +214,7 @@ public class GameManager : MonoBehaviour
         maxComboStreak = 0;
         collectedFishColors.Clear();
         newSpeciesThisGame.Clear();
+        collectedSpeciesIds.Clear();
 
         timeLeft    = currentMode == GameMode.Zen ? float.MaxValue : gameDuration;
         gameRunning = true;
@@ -272,7 +274,7 @@ public class GameManager : MonoBehaviour
         CurrencyStore.AddCoins(coins);
 
         if (resultXpText != null)
-            resultXpText.text = $"+{xpEarned} XP";
+            resultXpText.text = xpEarned > 0 ? $"+{xpEarned} XP" : "";
 
         RefreshProgressionHUD();
 
@@ -302,16 +304,22 @@ public class GameManager : MonoBehaviour
 
     string CollectSummary()
     {
-        // Show species names if any were caught via catalog, otherwise fall back to colours
-        if (newSpeciesThisGame.Count > 0 && fishSpawner != null && fishSpawner.catalog != null)
+        // When catalog active and species were caught, aggregate all catches (not only new ones)
+        if (collectedSpeciesIds.Count > 0 && fishSpawner != null && fishSpawner.catalog != null)
         {
-            var names = new List<string>();
-            foreach (var id in newSpeciesThisGame)
+            var order  = new List<string>();
+            var counts = new Dictionary<string, int>();
+            foreach (var id in collectedSpeciesIds)
             {
-                var sp = fishSpawner.catalog.GetById(id);
-                names.Add(sp != null ? sp.displayName : id);
+                var sp   = fishSpawner.catalog.GetById(id);
+                string n = sp != null ? sp.displayName : id;
+                if (!counts.ContainsKey(n)) { counts[n] = 0; order.Add(n); }
+                counts[n]++;
             }
-            return string.Join(", ", names);
+            var parts = new List<string>();
+            foreach (var n in order)
+                parts.Add(counts[n] > 1 ? $"{n} ×{counts[n]}" : n);
+            return string.Join(", ", parts);
         }
         return ColorSummary.Format(collectedFishColors);
     }
@@ -348,6 +356,8 @@ public class GameManager : MonoBehaviour
 
     public void PickNewTarget()
     {
+        if (!gameRunning) return;
+
         int activeColors = FishPalette.CountForProgress(correctHitCount);
         Color[] active   = FishPalette.ActiveOptions(activeColors);
         targetColor      = active[Random.Range(0, active.Length)];
@@ -356,22 +366,20 @@ public class GameManager : MonoBehaviour
         if (targetColorLabel != null)
             targetColorLabel.text = ColorHexLocalization.ToIndonesian(targetColor);
 
-        // If a catalog is loaded, show the species name instead of the colour word
-        FishSpecies currentTarget = fishSpawner != null ? fishSpawner.CurrentTargetSpecies : null;
-        if (targetSpeciesLabel != null)
-            targetSpeciesLabel.text = currentTarget != null ? currentTarget.displayName : "";
-
         fishSpawner.fishCount = FishCountForDifficulty(correctHitCount);
-        // TODO (Zen mode): pass a speed multiplier of 0.5f when currentMode == GameMode.Zen
-        // once FishSpawner.SpawnFish accepts a speedMultiplier parameter.
         fishSpawner.SpawnFish(targetColor, activeColors);
 
-        // Update targetColorImage with actual species colour when catalog is active
+        // Update target UI with resolved species colour/name now that SpawnFish has run
         if (fishSpawner.CurrentTargetSpecies != null)
         {
             targetColor = fishSpawner.CurrentTargetSpecies.baseColor;
             targetColorImage.color = targetColor;
         }
+
+        if (targetSpeciesLabel != null)
+            targetSpeciesLabel.text = fishSpawner.CurrentTargetSpecies != null
+                ? fishSpawner.CurrentTargetSpecies.displayName
+                : "";
     }
 
     public static int FishCountForDifficulty(int correct)
@@ -410,6 +418,7 @@ public class GameManager : MonoBehaviour
             // Species discovery (Phase 1)
             if (!string.IsNullOrEmpty(speciesId))
             {
+                collectedSpeciesIds.Add(speciesId);
                 bool isNew = FishdexStore.Unlock(speciesId);
                 if (isNew) newSpeciesThisGame.Add(speciesId);
             }

@@ -49,6 +49,15 @@
 ### CI Fix (2026-06-02)
 - [x] Fix CI trigger branch `main` → `master + main` so all PRs against master run CI
 
+### Week 5 (2026-06-02)
+- [x] `PickNewTarget` guard — no fish spawn after EndGame
+- [x] `FishSpawner` duplicate `FishSwim` fix — no more erratic fish movement
+- [x] Stale species label — `targetSpeciesLabel` updated after `SpawnFish`
+- [x] `PlaceWaterOnPlane` one-shot — mid-game re-placement disabled
+- [x] `CollectSummary` fixed for returning players — shows all-caught species/colours
+- [x] `Accuracy.Format(0,0)` returns `"--"` instead of `"0/0 (0%)"`
+- [x] Suppress `"+0 XP"` label when no XP earned
+
 ### Week 4 (2026-06-02)
 - [x] Audio robustness (null-guards) + persisted mute API
 - [x] Progressive colour difficulty (3 → 4 colours)
@@ -104,3 +113,10 @@
 - [ ] Expand colour vocabulary beyond 4 (Dict.cs has 20; palette ready to grow)
 - [ ] Hit animation on fish — "caught" squish/flop in Animator
 - [ ] Per-channel volume sliders (music vs SFX)
+
+## Week 6 Candidates (from Week 5 tester report)
+- [ ] Achievement unlock in-game notification toast/banner (UX-2) — requires new UI panel + C# show/hide
+- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` integration
+- [ ] Stagger level-up panel + new-record badge on result screen (POLISH-1) — 0.3–0.5 s delay
+- [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02a partial)
+- [ ] ScreenShake wrong-hit magnitude — reduce lurch on low-end devices (POLISH-3)

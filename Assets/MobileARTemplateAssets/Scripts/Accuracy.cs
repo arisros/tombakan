@@ -19,10 +19,11 @@ public static class Accuracy
         return Mathf.RoundToInt(100f * correct / total);
     }
 
-    /// <summary>Result-screen readout, e.g. "9/12 (75%)".</summary>
+    /// <summary>Result-screen readout, e.g. "9/12 (75%)". Returns "--" when no throws.</summary>
     public static string Format(int correct, int wrong)
     {
         int total = correct + wrong;
+        if (total <= 0) return "--";
         return $"{correct}/{total} ({Percent(correct, wrong)}%)";
     }
 }
