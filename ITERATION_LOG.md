@@ -1,5 +1,20 @@
 # Iteration Log
 
+## Week 6 — 2026-06-03
+
+**Branch:** `iteration/week-6`
+**Tasks completed:** 3
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| TASK-01 | Four small bugs: `OnFishHit` `!gameRunning` guard; daily-bonus level-up surfaced in `TombakanOnboarding`; `HapticFeedback` decoupled from audio mute | `GameManager.cs`, `TombakanOnboarding.cs`, `HapticFeedback.cs` |
+| TASK-02 | Achievement toast (null-safe) + stagger result celebrations (0.4 s badge, 0.8 s level-up) | `GameManager.cs` |
+| TASK-03 | Add `AchievementToastPanel` + `AchievementToastText` to `GamePlayUI` in scene; wire GameManager fields | `Assets/Scenes/GamePlay.unity` |
+
+**Artefacts:** `TESTER_REPORT_week6.md`, `ITERATION_week6_SCOPE.md`
+
+---
+
 ## Week 5 — 2026-06-02
 
 **Branch:** `iteration/week-5`

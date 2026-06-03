@@ -81,6 +81,10 @@ public class GameManager : MonoBehaviour
     [Header("Achievements (optional/null-safe)")]
     [SerializeField] AchievementCatalog achievementCatalog;
 
+    [Header("Achievement Toast (optional/null-safe)")]
+    public GameObject achievementToastPanel;
+    public TMP_Text achievementToastText;
+
     // --- Internal state ---
 
     Color targetColor;
@@ -262,7 +266,6 @@ public class GameManager : MonoBehaviour
 
         bool isRecord = ScoreStore.TrySetBest(score);
         RefreshBestScoreUI();
-        if (newRecordBadge != null) newRecordBadge.SetActive(isRecord);
 
         UpdateTierStars();
 
@@ -278,19 +281,14 @@ public class GameManager : MonoBehaviour
 
         RefreshProgressionHUD();
 
-        if (newLevel > 0)
-            ShowLevelUp(newLevel);
-
-        // Grant level rewards
-        if (newLevel > 0 && levelRewardTable != null)
-            ApplyLevelReward(levelRewardTable.GetRewardForLevel(newLevel));
+        // Stagger badge and level-up panel (0.4 s and 0.8 s after result screen)
+        StartCoroutine(StaggerResultCelebrations(isRecord, newLevel));
 
         // --- Achievements ---
         if (achievementCatalog != null)
         {
             string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
-            foreach (string id in newlyUnlocked)
-                Debug.Log($"[Tombakan] Achievement unlocked: {id}");
+            StartCoroutine(ShowAchievementsSequenced(newlyUnlocked, achievementCatalog));
         }
 
         if (timerPulseRoutine != null)
@@ -330,6 +328,47 @@ public class GameManager : MonoBehaviour
         levelUpPanel.SetActive(true);
         if (levelUpText != null)
             levelUpText.text = $"Level {newLevel}! Selamat!";
+    }
+
+    System.Collections.IEnumerator StaggerResultCelebrations(bool isRecord, int newLevel)
+    {
+        yield return new WaitForSecondsRealtime(0.4f);
+
+        if (isRecord && newRecordBadge != null)
+        {
+            newRecordBadge.SetActive(true);
+            PunchScale(newRecordBadge.transform);
+        }
+
+        yield return new WaitForSecondsRealtime(0.4f);
+
+        if (newLevel > 0)
+        {
+            ShowLevelUp(newLevel);
+            ApplyLevelReward(levelRewardTable?.GetRewardForLevel(newLevel));
+        }
+    }
+
+    System.Collections.IEnumerator ShowAchievementsSequenced(string[] ids, AchievementCatalog catalog)
+    {
+        yield return new WaitForSecondsRealtime(1.2f);
+
+        foreach (string id in ids)
+        {
+            if (achievementToastPanel == null) yield break;
+
+            var achievement = catalog?.GetById(id);
+            string title = (achievement != null && !string.IsNullOrEmpty(achievement.titleIndonesian))
+                ? achievement.titleIndonesian
+                : id;
+
+            if (achievementToastText != null)
+                achievementToastText.text = title;
+
+            achievementToastPanel.SetActive(true);
+            yield return new WaitForSecondsRealtime(2f);
+            achievementToastPanel.SetActive(false);
+        }
     }
 
     void ApplyLevelReward(LevelReward reward)
@@ -398,6 +437,7 @@ public class GameManager : MonoBehaviour
 
     public void OnFishHit(Color fishColor, string speciesId)
     {
+        if (!gameRunning) return;
         bool correct = fishColor == targetColor;
 
         if (correct)
