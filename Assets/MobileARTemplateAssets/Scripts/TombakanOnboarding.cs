@@ -1,3 +1,4 @@
+using System.Collections;
 using TMPro;
 using UnityEngine;
 
@@ -9,6 +10,8 @@ using UnityEngine;
 /// </summary>
 public class TombakanOnboarding : MonoBehaviour
 {
+    public static TombakanOnboarding I { get; private set; }
+
     [Header("References")]
     public GoalManager goalManager;          // the AR template onboarding manager
 
@@ -17,8 +20,19 @@ public class TombakanOnboarding : MonoBehaviour
     public GameObject dailyBonusPanel;       // shown when a daily bonus is claimed
     public TMP_Text dailyBonusText;          // e.g. "Bonus harian +100 XP! Streak 3 hari!"
 
+    [Header("Throw Hint UI (optional)")]
+    [SerializeField] private GameObject hintPanel;
+    [SerializeField] private TMPro.TMP_Text hintText;
+
     [Header("Settings")]
     public bool skipOnboardingForReturning = true; // if true, veteran players skip AR steps
+
+    Coroutine _autoDismissRoutine;
+
+    void Awake()
+    {
+        I = this;
+    }
 
     void Start()
     {
@@ -45,6 +59,10 @@ public class TombakanOnboarding : MonoBehaviour
 
     void ShowDailyBonus(int xp, int streak, int newLevel = 0)
     {
+        if (newLevel > 0)
+            GameManager.I?.ApplyLevelReward(
+                GameManager.I?.levelRewardTable?.GetRewardForLevel(newLevel));
+
         if (dailyBonusPanel == null) return;
         dailyBonusPanel.SetActive(true);
 
@@ -71,5 +89,51 @@ public class TombakanOnboarding : MonoBehaviour
     {
         if (greetingPanel != null) greetingPanel.SetActive(false);
         if (goalManager  != null) goalManager.StartCoaching();
+    }
+
+    // --- Throw hint ---
+
+    /// <summary>
+    /// Called by GameManager.StartGame() to trigger the delayed throw hint
+    /// for players who haven't thrown yet.
+    /// </summary>
+    public void NotifyGameStarted()
+    {
+        StartCoroutine(ShowThrowHint());
+    }
+
+    /// <summary>
+    /// Called by SpearThrower the moment the first spear is thrown.
+    /// Cancels the pending auto-dismiss and hides the hint immediately.
+    /// </summary>
+    public void NotifyFirstThrow()
+    {
+        if (_autoDismissRoutine != null)
+        {
+            StopCoroutine(_autoDismissRoutine);
+            _autoDismissRoutine = null;
+        }
+        if (hintPanel != null) hintPanel.SetActive(false);
+    }
+
+    IEnumerator ShowThrowHint()
+    {
+        yield return new WaitForSeconds(2f);
+
+        // Only show if no throws have happened yet
+        if (GameManager.I == null) yield break;
+        if (GameManager.I.correctHitCount != 0 || GameManager.I.WrongHitCount != 0) yield break;
+
+        if (hintText  != null) hintText.text = "Sentuh tombol untuk melempar tombak!";
+        if (hintPanel != null) hintPanel.SetActive(true);
+
+        _autoDismissRoutine = StartCoroutine(AutoDismissHint());
+    }
+
+    IEnumerator AutoDismissHint()
+    {
+        yield return new WaitForSeconds(5f);
+        if (hintPanel != null) hintPanel.SetActive(false);
+        _autoDismissRoutine = null;
     }
 }

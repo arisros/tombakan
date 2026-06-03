@@ -1,5 +1,21 @@
 # Iteration Log
 
+## Week 7 — 2026-06-03
+
+**Branch:** `iteration/week-7`
+**Tasks completed:** 4
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| T1 | BUG-W7-2: `AchievementChecker` captures `AddXp` return value; calls `ApplyLevelReward` on level-up from achievement XP; `GameManager.ApplyLevelReward` made `public` | `AchievementChecker.cs`, `GameManager.cs` |
+| T2 | BUG-W7-5: `ShowSad` shows `"Miss!"` (not `"-25!"`) when score is 0 and penalty is absorbed by clamp | `GameManager.cs` |
+| T3 | BUG-W7-1: `TombakanOnboarding.ShowDailyBonus` calls `ApplyLevelReward` when daily XP crosses level boundary | `TombakanOnboarding.cs` |
+| T4 | UX: Throw-mechanic tutorial hint — `NotifyGameStarted` / `ShowThrowHint` coroutine (2 s delay, zero-throw guard, Indonesian string, 5 s auto-dismiss); `SpearThrower` calls `NotifyFirstThrow` on first throw | `TombakanOnboarding.cs`, `SpearThrower.cs`, `GameManager.cs` |
+
+**Artefacts:** `TESTER_REPORT_week7.md`, `ITERATION_week7_SCOPE.md`, `Assets/Tests/EditMode/Week7Tests.cs` (23 tests)
+
+---
+
 ## Week 6 — 2026-06-03
 
 **Branch:** `iteration/week-6`

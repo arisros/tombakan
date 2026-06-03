@@ -248,6 +248,8 @@ public class GameManager : MonoBehaviour
 
         happyFeedback.SetActive(false);
         sadFeedback.SetActive(false);
+
+        TombakanOnboarding.I?.NotifyGameStarted();
     }
 
     void EndGame()
@@ -480,10 +482,10 @@ public class GameManager : MonoBehaviour
         {
             comboStreak = 0;
             wrongHitCount++;
-            int previousScore = score;
+            int scoreBefore = score;
             score = ClampScore(score - penaltyPerWrongHit);
-            int actualDeduction = previousScore - score;
-            ShowSad(actualDeduction);
+            bool deductionAbsorbed = score == scoreBefore;
+            ShowSad(deductionAbsorbed);
             if (AudioManager.I != null) AudioManager.I.PlayWrong();
             if (ScreenShake.I != null) ScreenShake.I.ShakeOnWrong();
             HapticFeedback.PlayWrong();
@@ -512,10 +514,10 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(HideFeedback), 1f);
     }
 
-    void ShowSad(int actualDeduction)
+    void ShowSad(bool deductionAbsorbed = false)
     {
         sadFeedback.SetActive(true);
-        sadFeedbackText.text = actualDeduction > 0 ? $"-{actualDeduction}!" : "Miss!";
+        sadFeedbackText.text = deductionAbsorbed ? "Miss!" : $"-{penaltyPerWrongHit}!";
         Invoke(nameof(HideFeedback), 1f);
     }
 

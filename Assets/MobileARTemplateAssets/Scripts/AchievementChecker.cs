@@ -97,7 +97,12 @@ public static class AchievementChecker
             {
                 Achievement achievement = catalog.GetById(id);
                 if (achievement != null && achievement.xpReward > 0)
-                    ProgressionStore.AddXp(achievement.xpReward);
+                {
+                    int newLevel = ProgressionStore.AddXp(achievement.xpReward);
+                    if (newLevel > 0)
+                        GameManager.I?.ApplyLevelReward(
+                            GameManager.I?.levelRewardTable?.GetRewardForLevel(newLevel));
+                }
             }
         }
 

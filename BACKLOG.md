@@ -122,8 +122,15 @@
 - [x] Result celebrations staggered — badge at +0.4 s, level-up panel at +0.8 s
 - [x] `AchievementToastPanel` + `AchievementToastText` added to scene, wired to `GameManager`
 
-## Week 7 Candidates (from Week 6 tester report)
-- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` coaching step + hint panel ("Sentuh tombol untuk melempar tombak")
-- [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
-- [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02 partial from Week 5)
-- [ ] `DailyChallenge.TryClaimDailyBonus` — propagate level-up return value to caller so rewards are applied (BUG-2 partial — TombakanOnboarding fixed; DailyChallenge.cs:58 reward grant still skipped)
+### Week 7 (2026-06-03)
+- [x] BUG-W7-2: `AchievementChecker` captures `AddXp` return value — level-up XP from achievements now applies `LevelReward`
+- [x] BUG-W7-5: `ShowSad` shows `"Miss!"` when score is 0 and penalty is fully absorbed by clamp
+- [x] BUG-W7-1: `TombakanOnboarding.ShowDailyBonus` calls `ApplyLevelReward` — daily-bonus level-up rewards no longer silently skipped
+- [x] UX: Throw-mechanic tutorial hint — `TombakanOnboarding` shows Indonesian hint 2 s after game start on zero-throw sessions; dismissed on first throw or after 5 s; `SpearThrower` calls `NotifyFirstThrow`
+
+## Week 8 Candidates (from Week 7 tester report)
+- [ ] Platform-specific haptic differentiation — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS (requires device test matrix)
+- [ ] "Re-position water" button — `PlaceWaterOnPlane` re-enable path (one-shot guard currently blocks mid-game repositioning)
+- [ ] BUG-W7-3: `ColourBlindSettings.ShapeForColor` returns `"?"` for `FishSpecies.baseColor` values outside the four palette hex values — needs catalog colour normalisation
+- [ ] BUG-W7-6: `GoalManager.ForceCompleteGoal()` called in `TombakanOnboarding.Start()` before coaching queue is initialised — potential NRE for returning players
+- [ ] Scene wiring audit: `TombakanOnboarding.hintPanel` + `hintText` must be assigned in `GamePlay.unity` for T4 to work at runtime

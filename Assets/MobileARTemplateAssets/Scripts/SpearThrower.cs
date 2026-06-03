@@ -48,6 +48,8 @@ public class SpearThrower : MonoBehaviour
         if (!canThrow) return;
         canThrow = false;
 
+        TombakanOnboarding.I?.NotifyFirstThrow();
+
         if (spearFake) spearFake.SetActive(false);
 
         GameObject prefab = ResolveEquippedPrefab();
