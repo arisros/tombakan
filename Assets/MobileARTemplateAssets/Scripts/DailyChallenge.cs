@@ -29,7 +29,7 @@ public static class DailyChallenge
 
     static string Today => DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-    public static bool TryClaimDailyBonus(out int xpAwarded, out int streak)
+    public static bool TryClaimDailyBonus(out int xpAwarded, out int streak, out int newLevel)
     {
         string lastPlayed = PlayerPrefs.GetString(LastPlayedKey, "");
         string today      = Today;
@@ -38,6 +38,7 @@ public static class DailyChallenge
         {
             xpAwarded = 0;
             streak    = PlayerPrefs.GetInt(StreakKey, 0);
+            newLevel  = 0;
             return false;
         }
 
@@ -55,7 +56,7 @@ public static class DailyChallenge
         PlayerPrefs.SetInt(StreakKey, streak);
         PlayerPrefs.Save();
 
-        ProgressionStore.AddXp(xpAwarded);
+        newLevel = ProgressionStore.AddXp(xpAwarded);
         return true;
     }
 

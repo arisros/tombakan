@@ -255,9 +255,19 @@ public class GoalManager : MonoBehaviour
 
     /// <summary>
     /// Forces the completion of the current goal and moves to the next.
+    /// Safe to call before <see cref="StartCoaching"/> has been invoked (e.g. for
+    /// returning players who skip onboarding): if the goal queue or step list is
+    /// uninitialised / empty, the manager simply marks all goals as finished and
+    /// returns without touching any list indices.
     /// </summary>
     public void ForceCompleteGoal()
     {
+        if (m_OnboardingGoals == null || m_StepList == null || m_StepList.Count == 0)
+        {
+            m_AllGoalsFinished = true;
+            return;
+        }
+
         CompleteGoal();
     }
 

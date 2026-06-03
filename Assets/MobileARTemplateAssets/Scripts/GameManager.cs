@@ -287,7 +287,15 @@ public class GameManager : MonoBehaviour
         // --- Achievements ---
         if (achievementCatalog != null)
         {
+            int levelBeforeAchievements = ProgressionStore.GetLevel();
             string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
+            int levelAfterAchievements = ProgressionStore.GetLevel();
+
+            // If achievement XP caused a level-up that the main game XP award didn't already cover,
+            // apply the reward for the achievement-triggered level.
+            if (levelAfterAchievements > levelBeforeAchievements && newLevel == 0)
+                ApplyLevelReward(levelRewardTable?.GetRewardForLevel(levelAfterAchievements));
+
             StartCoroutine(ShowAchievementsSequenced(newlyUnlocked, achievementCatalog));
         }
 
@@ -351,7 +359,7 @@ public class GameManager : MonoBehaviour
 
     System.Collections.IEnumerator ShowAchievementsSequenced(string[] ids, AchievementCatalog catalog)
     {
-        yield return new WaitForSecondsRealtime(1.2f);
+        yield return new WaitForSecondsRealtime(3.5f);
 
         foreach (string id in ids)
         {
@@ -371,7 +379,7 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void ApplyLevelReward(LevelReward reward)
+    public void ApplyLevelReward(LevelReward reward)
     {
         if (reward == null) return;
 
@@ -472,8 +480,10 @@ public class GameManager : MonoBehaviour
         {
             comboStreak = 0;
             wrongHitCount++;
+            int previousScore = score;
             score = ClampScore(score - penaltyPerWrongHit);
-            ShowSad();
+            int actualDeduction = previousScore - score;
+            ShowSad(actualDeduction);
             if (AudioManager.I != null) AudioManager.I.PlayWrong();
             if (ScreenShake.I != null) ScreenShake.I.ShakeOnWrong();
             HapticFeedback.PlayWrong();
@@ -502,10 +512,10 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(HideFeedback), 1f);
     }
 
-    void ShowSad()
+    void ShowSad(int actualDeduction)
     {
         sadFeedback.SetActive(true);
-        sadFeedbackText.text = $"-{penaltyPerWrongHit}!";
+        sadFeedbackText.text = actualDeduction > 0 ? $"-{actualDeduction}!" : "Miss!";
         Invoke(nameof(HideFeedback), 1f);
     }
 
