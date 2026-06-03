@@ -114,9 +114,16 @@
 - [ ] Hit animation on fish — "caught" squish/flop in Animator
 - [ ] Per-channel volume sliders (music vs SFX)
 
-## Week 6 Candidates (from Week 5 tester report)
-- [ ] Achievement unlock in-game notification toast/banner (UX-2) — requires new UI panel + C# show/hide
-- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` integration
-- [ ] Stagger level-up panel + new-record badge on result screen (POLISH-1) — 0.3–0.5 s delay
-- [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02a partial)
-- [ ] ScreenShake wrong-hit magnitude — reduce lurch on low-end devices (POLISH-3)
+### Week 6 (2026-06-03)
+- [x] `OnFishHit` guard — mid-flight spear no longer corrupts score after `EndGame`
+- [x] Daily-bonus level-up surfaced in `TombakanOnboarding` greeting
+- [x] `HapticFeedback` decoupled from audio mute — vibration works when player mutes audio
+- [x] Achievement toast — newly unlocked achievements shown via `AchievementToastPanel` (2 s, sequenced)
+- [x] Result celebrations staggered — badge at +0.4 s, level-up panel at +0.8 s
+- [x] `AchievementToastPanel` + `AchievementToastText` added to scene, wired to `GameManager`
+
+## Week 7 Candidates (from Week 6 tester report)
+- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` coaching step + hint panel ("Sentuh tombol untuk melempar tombak")
+- [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
+- [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02 partial from Week 5)
+- [ ] `DailyChallenge.TryClaimDailyBonus` — propagate level-up return value to caller so rewards are applied (BUG-2 partial — TombakanOnboarding fixed; DailyChallenge.cs:58 reward grant still skipped)
