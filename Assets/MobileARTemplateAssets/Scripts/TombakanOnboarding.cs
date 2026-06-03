@@ -35,19 +35,29 @@ public class TombakanOnboarding : MonoBehaviour
         }
 
         // Check for daily bonus — claim on every session start
+        int levelBefore = ProgressionStore.GetLevel();
         if (DailyChallenge.TryClaimDailyBonus(out int xp, out int streak))
-            ShowDailyBonus(xp, streak);
+        {
+            int levelAfter = ProgressionStore.GetLevel();
+            int newLevel = levelAfter > levelBefore ? levelAfter : 0;
+            ShowDailyBonus(xp, streak, newLevel);
+        }
     }
 
-    void ShowDailyBonus(int xp, int streak)
+    void ShowDailyBonus(int xp, int streak, int newLevel = 0)
     {
         if (dailyBonusPanel == null) return;
         dailyBonusPanel.SetActive(true);
 
         if (dailyBonusText != null)
-            dailyBonusText.text = streak > 1
+        {
+            string baseText = streak > 1
                 ? $"Bonus harian +{xp} XP!\nStreak {streak} hari berturut-turut!"
                 : $"Bonus harian +{xp} XP!\nSelamat datang kembali!";
+            dailyBonusText.text = newLevel > 0
+                ? $"{baseText}\nLevel {newLevel}! Selamat!"
+                : baseText;
+        }
 
         Invoke(nameof(HideDailyBonus), 3f);
     }
