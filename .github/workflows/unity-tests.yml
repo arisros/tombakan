@@ -7,8 +7,26 @@ on:
     branches: [master]
 
 jobs:
+  check-secrets:
+    runs-on: ubuntu-latest
+    outputs:
+      has_license: ${{ steps.check.outputs.has_license }}
+    steps:
+      - id: check
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        run: |
+          if [ -n "$UNITY_LICENSE" ]; then
+            echo "has_license=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_license=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::UNITY_LICENSE secret not set — Unity test jobs will be skipped."
+          fi
+
   test:
     name: Run ${{ matrix.testMode }} Tests
+    needs: check-secrets
+    if: needs.check-secrets.outputs.has_license == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
