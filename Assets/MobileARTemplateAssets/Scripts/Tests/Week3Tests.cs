@@ -70,6 +70,12 @@ public class AccuracyTests
     public void Format_ProducesReadout()
     {
         Assert.AreEqual("9/12 (75%)", Accuracy.Format(9, 3));
-        Assert.AreEqual("0/0 (0%)", Accuracy.Format(0, 0));
+    }
+
+    [Test]
+    public void Format_ZeroThrows_ReturnsDash()
+    {
+        // Week 5 TASK-03: zero-throw state must not display "0/0 (0%)" to the player
+        Assert.AreEqual("--", Accuracy.Format(0, 0));
     }
 }
