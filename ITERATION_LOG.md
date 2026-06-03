@@ -1,5 +1,22 @@
 # Iteration Log
 
+## Week 5 — 2026-06-02
+
+**Branch:** `iteration/week-5`
+**Tasks completed:** 4
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| TASK-01 | Spawn-pipeline bugs: `PickNewTarget` post-game guard + duplicate `FishSwim` fix + stale species label reorder | `GameManager.cs`, `FishSpawner.cs` |
+| TASK-02 | Defensive guards: `PlaceWaterOnPlane` one-shot placement + `CollectSummary` shows all-caught species for returning players | `PlaceWaterOnPlane.cs`, `GameManager.cs` |
+| TASK-03 | Result-screen polish: `Accuracy.Format(0,0)` → `"--"`; suppress `"+0 XP"` label | `Accuracy.cs`, `GameManager.cs` |
+| TASK-04 | Remove dead Zen-mode TODO comment | `GameManager.cs` |
+
+**Artefacts:** `TESTER_REPORT_week5.md`, `ITERATION_week5_SCOPE.md`,
+`Assets/.../Tests/Week5Tests.cs`, Week3Tests.cs updated (Accuracy contract change)
+
+---
+
 ## Phase 1 + 2 + 2.5 — 2026-06-02
 
 **Branch:** `master` (direct)
