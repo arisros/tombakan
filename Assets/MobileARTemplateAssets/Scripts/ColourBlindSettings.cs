@@ -19,8 +19,7 @@ public static class ColourBlindSettings
     // FishPalette.Options receive subsequent symbols from the bank.
     static readonly string[] SymbolBank = { "●", "▲", "■", "★", "◆", "▼", "✦", "⬟" };
 
-    // Built once at class initialisation from the live FishPalette.Options array,
-    // so any future palette extension is automatically covered.
+    // Exact palette lookup — built once from FishPalette.Options at class init.
     static readonly Dictionary<string, string> HexToShape = BuildMap();
 
     static Dictionary<string, string> BuildMap()
@@ -30,7 +29,6 @@ public static class ColourBlindSettings
         {
             string hex = ColorUtility.ToHtmlStringRGB(FishPalette.Options[i]).ToUpperInvariant();
             string symbol = i < SymbolBank.Length ? SymbolBank[i] : "?";
-            // Only insert once in case two palette entries somehow produce the same hex.
             if (!map.ContainsKey(hex))
                 map[hex] = symbol;
         }
@@ -38,12 +36,24 @@ public static class ColourBlindSettings
     }
 
     /// <summary>
-    /// Maps a palette colour to a unique shape symbol for colour-blind mode.
-    /// Returns "?" only for colours genuinely outside <see cref="FishPalette.Options"/>.
+    /// Maps any colour to a shape symbol for colour-blind mode.
+    /// Exact palette hex matches use the assigned symbol; any other colour
+    /// (e.g. FishSpecies.baseColor for catalog species) falls back to hue proximity.
     /// </summary>
     public static string ShapeForColor(Color color)
     {
         string hex = ColorUtility.ToHtmlStringRGB(color).ToUpperInvariant();
-        return HexToShape.TryGetValue(hex, out string shape) ? shape : "?";
+        if (HexToShape.TryGetValue(hex, out string shape)) return shape;
+
+        // Hue-proximity fallback for catalog species with non-palette colours
+        Color.RGBToHSV(color, out float h, out float s, out float v);
+
+        if (s < 0.15f || v < 0.15f)
+            return v >= 0.5f ? "●" : "■";
+
+        if (h >= 0.95f || h < 0.08f) return "●";   // Red
+        if (h < 0.20f)               return "★";   // Yellow / Orange
+        if (h < 0.50f)               return "▲";   // Green / Cyan
+        return "■";                                 // Blue / Purple / Magenta
     }
 }

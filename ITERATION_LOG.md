@@ -1,18 +1,20 @@
 # Iteration Log
 
-## Week 7 — 2026-06-03
+## Week 7 — 2026-06-08
 
 **Branch:** `iteration/week-7`
-**Tasks completed:** 4
+**Tasks completed:** 5 (+ 1 bonus polish)
 
 | Task | Description | Files Changed |
 |------|-------------|---------------|
-| T1 | BUG-W7-2: `AchievementChecker` captures `AddXp` return value; calls `ApplyLevelReward` on level-up from achievement XP; `GameManager.ApplyLevelReward` made `public` | `AchievementChecker.cs`, `GameManager.cs` |
-| T2 | BUG-W7-5: `ShowSad` shows `"Miss!"` (not `"-25!"`) when score is 0 and penalty is absorbed by clamp | `GameManager.cs` |
-| T3 | BUG-W7-1: `TombakanOnboarding.ShowDailyBonus` calls `ApplyLevelReward` when daily XP crosses level boundary | `TombakanOnboarding.cs` |
-| T4 | UX: Throw-mechanic tutorial hint — `NotifyGameStarted` / `ShowThrowHint` coroutine (2 s delay, zero-throw guard, Indonesian string, 5 s auto-dismiss); `SpearThrower` calls `NotifyFirstThrow` on first throw | `TombakanOnboarding.cs`, `SpearThrower.cs`, `GameManager.cs` |
+| TASK-01 | Achievement XP silent level-up fixed: `GameManager.EndGame` captures level before/after `AchievementChecker.CheckAll`; `ApplyLevelReward` made public; level-up from achievement XP applies rewards | `GameManager.cs` |
+| TASK-02 | Daily-bonus `ApplyLevelReward` gap closed: `DailyChallenge.TryClaimDailyBonus` now returns `out int newLevel`; `TombakanOnboarding.ShowDailyBonus` calls `ApplyLevelReward` when daily XP causes level-up | `DailyChallenge.cs`, `TombakanOnboarding.cs`, `GameManager.cs` |
+| TASK-03 | `ColourBlindSettings.ShapeForColor` combined approach: palette dictionary first, then hue-proximity fallback for catalog species with non-palette colours — no more `"?"` on any colour | `ColourBlindSettings.cs` |
+| TASK-04 | `ShowSad()` truthful penalty: `int actualDeduction = Mathf.Min(penalty, score)`; shows `"Miss!"` when score was already 0 | `GameManager.cs` |
+| TASK-05 | Throw-mechanic tutorial hint: `TombakanOnboarding.NotifyGameStarted` / `ShowThrowHint` coroutine (2 s delay, zero-throw guard, Indonesian string, 5 s auto-dismiss); `SpearThrower` calls `NotifyFirstThrow` on first throw | `TombakanOnboarding.cs`, `SpearThrower.cs`, `GameManager.cs` |
+| BONUS | `ColorSummary ×1` suppression: single-occurrence entries show `"Merah"` not `"Merah ×1"`; Week 2 tests updated | `ColorSummary.cs`, `Tests/Week2Tests.cs` |
 
-**Artefacts:** `TESTER_REPORT_week7.md`, `ITERATION_week7_SCOPE.md`, `Assets/Tests/EditMode/Week7Tests.cs` (23 tests)
+**Artefacts:** `TESTER_REPORT_week7.md`, `ITERATION_week7_SCOPE.md`, `Assets/.../Tests/Week7Tests.cs`
 
 ---
 

@@ -50,11 +50,7 @@ public class TombakanOnboarding : MonoBehaviour
 
         // Check for daily bonus — claim on every session start
         if (DailyChallenge.TryClaimDailyBonus(out int xp, out int streak, out int bonusNewLevel))
-        {
             ShowDailyBonus(xp, streak, bonusNewLevel);
-            if (bonusNewLevel > 0)
-                GameManager.I?.ApplyLevelReward(GameManager.I?.levelRewardTable?.GetRewardForLevel(bonusNewLevel));
-        }
     }
 
     void ShowDailyBonus(int xp, int streak, int newLevel = 0)

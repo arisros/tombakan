@@ -93,21 +93,30 @@ public class ColorSummaryTests
     public void Format_AggregatesCountsInFirstSeenOrder()
     {
         var input = new List<string> { "FF0000", "FF0000", "0000FF", "FF0000" };
-        // Merah seen first (×3), then Biru (×1)
-        Assert.AreEqual("Merah ×3, Biru ×1", ColorSummary.Format(input));
+        // Merah seen first (×3), then Biru (single — no ×1 suffix per Week 7 POLISH-NEW-1)
+        Assert.AreEqual("Merah ×3, Biru", ColorSummary.Format(input));
     }
 
     [Test]
     public void Format_SingleColour()
     {
         var input = new List<string> { "00FF00" };
-        Assert.AreEqual("Hijau ×1", ColorSummary.Format(input));
+        // Single occurrence: no ×1 suffix (Week 7 POLISH-NEW-1)
+        Assert.AreEqual("Hijau", ColorSummary.Format(input));
     }
 
     [Test]
     public void Format_AllFourColours()
     {
         var input = new List<string> { "FF0000", "00FF00", "0000FF", "FFFF00" };
-        Assert.AreEqual("Merah ×1, Hijau ×1, Biru ×1, Kuning ×1", ColorSummary.Format(input));
+        // All single occurrences: no ×1 suffix (Week 7 POLISH-NEW-1)
+        Assert.AreEqual("Merah, Hijau, Biru, Kuning", ColorSummary.Format(input));
+    }
+
+    [Test]
+    public void Format_MultipleOccurrences_ShowsMultiplier()
+    {
+        var input = new List<string> { "FF0000", "FF0000", "00FF00", "00FF00", "0000FF" };
+        Assert.AreEqual("Merah ×2, Hijau ×2, Biru", ColorSummary.Format(input));
     }
 }

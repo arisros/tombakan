@@ -287,19 +287,16 @@ public class GameManager : MonoBehaviour
         StartCoroutine(StaggerResultCelebrations(isRecord, newLevel));
 
         // --- Achievements ---
+        int levelBeforeAchievements = ProgressionStore.GetLevel();
         if (achievementCatalog != null)
         {
-            int levelBeforeAchievements = ProgressionStore.GetLevel();
             string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
-            int levelAfterAchievements = ProgressionStore.GetLevel();
-
-            // If achievement XP caused a level-up that the main game XP award didn't already cover,
-            // apply the reward for the achievement-triggered level.
-            if (levelAfterAchievements > levelBeforeAchievements && newLevel == 0)
-                ApplyLevelReward(levelRewardTable?.GetRewardForLevel(levelAfterAchievements));
-
             StartCoroutine(ShowAchievementsSequenced(newlyUnlocked, achievementCatalog));
         }
+        // Achievement XP grants can silently level up; surface with panel + rewards after toasts
+        int levelAfterAchievements = ProgressionStore.GetLevel();
+        if (levelAfterAchievements > levelBeforeAchievements && newLevel == 0)
+            StartCoroutine(DelayedAchievementLevelUp(levelAfterAchievements));
 
         if (timerPulseRoutine != null)
         {
@@ -357,6 +354,14 @@ public class GameManager : MonoBehaviour
             ShowLevelUp(newLevel);
             ApplyLevelReward(levelRewardTable?.GetRewardForLevel(newLevel));
         }
+    }
+
+    // Fires level-up panel after achievement toasts have had time to display
+    System.Collections.IEnumerator DelayedAchievementLevelUp(int level)
+    {
+        yield return new WaitForSecondsRealtime(3.5f);
+        ShowLevelUp(level);
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(level));
     }
 
     System.Collections.IEnumerator ShowAchievementsSequenced(string[] ids, AchievementCatalog catalog)
@@ -482,10 +487,9 @@ public class GameManager : MonoBehaviour
         {
             comboStreak = 0;
             wrongHitCount++;
-            int scoreBefore = score;
+            int actualDeduction = Mathf.Min(penaltyPerWrongHit, score);
             score = ClampScore(score - penaltyPerWrongHit);
-            bool deductionAbsorbed = score == scoreBefore;
-            ShowSad(deductionAbsorbed);
+            ShowSad(actualDeduction);
             if (AudioManager.I != null) AudioManager.I.PlayWrong();
             if (ScreenShake.I != null) ScreenShake.I.ShakeOnWrong();
             HapticFeedback.PlayWrong();
@@ -514,10 +518,10 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(HideFeedback), 1f);
     }
 
-    void ShowSad(bool deductionAbsorbed = false)
+    void ShowSad(int actualDeduction)
     {
         sadFeedback.SetActive(true);
-        sadFeedbackText.text = deductionAbsorbed ? "Miss!" : $"-{penaltyPerWrongHit}!";
+        sadFeedbackText.text = actualDeduction > 0 ? $"-{actualDeduction}!" : "Miss!";
         Invoke(nameof(HideFeedback), 1f);
     }
 
