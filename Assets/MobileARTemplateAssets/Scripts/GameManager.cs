@@ -64,6 +64,9 @@ public class GameManager : MonoBehaviour
     public TMP_Text resultBestScoreText;
     public GameObject newRecordBadge;
 
+    [Header("Zen Mode Exit (optional/null-safe)")]
+    public GameObject zenEndButton;   // shown only in Zen mode; onClick → EndGameManual()
+
     [Header("Progression HUD (optional/null-safe)")]
     public TMP_Text levelBadgeText;     // shows "Lv 3"
     public Image xpBarFill;             // fill amount 0–1
@@ -242,6 +245,7 @@ public class GameManager : MonoBehaviour
         resultContainer.SetActive(false);
         if (newRecordBadge != null) newRecordBadge.SetActive(false);
         if (levelUpPanel   != null) levelUpPanel.SetActive(false);
+        if (zenEndButton   != null) zenEndButton.SetActive(currentMode == GameMode.Zen);
 
         UpdateScoreUI();
         PickNewTarget();
@@ -254,7 +258,8 @@ public class GameManager : MonoBehaviour
 
     void EndGame()
     {
-        if (fishSpawner != null) fishSpawner.ClearAll();
+        if (fishSpawner  != null) fishSpawner.ClearAll();
+        if (zenEndButton != null) zenEndButton.SetActive(false);
 
         resultContainer.SetActive(true);
         resultScoreText.text = score.ToString();

@@ -226,3 +226,59 @@ public class ProgressionLevelUpDetectionTests
             "After adding XP that crosses a threshold, GetLevel() should increase");
     }
 }
+
+// ---------------------------------------------------------------------------
+// TASK-04 (this run)  PlaceWaterOnPlane _placed flag / BeginReposition
+// ---------------------------------------------------------------------------
+[TestFixture]
+public class PlaceWaterOnPlaneRepositionTests
+{
+    static System.Reflection.FieldInfo PlacedField() =>
+        typeof(PlaceWaterOnPlane)
+            .GetField("_placed", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+    [Test]
+    public void PlacedFlag_StartsAsFalse()
+    {
+        var go   = new GameObject("pwop");
+        var comp = go.AddComponent<PlaceWaterOnPlane>();
+        Assert.IsFalse((bool)PlacedField().GetValue(comp), "_placed must start false");
+        Object.DestroyImmediate(go);
+    }
+
+    [Test]
+    public void BeginReposition_ResetsFlagToFalse()
+    {
+        var go   = new GameObject("pwop");
+        var comp = go.AddComponent<PlaceWaterOnPlane>();
+        PlacedField().SetValue(comp, true);          // simulate completed placement
+        comp.BeginReposition();
+        Assert.IsFalse((bool)PlacedField().GetValue(comp));
+        Object.DestroyImmediate(go);
+    }
+
+    [Test]
+    public void BeginReposition_HidesRepositionButton()
+    {
+        var go   = new GameObject("pwop");
+        var comp = go.AddComponent<PlaceWaterOnPlane>();
+        var btn  = new GameObject("btn");
+        btn.SetActive(true);
+        comp.repositionButton = btn;
+        PlacedField().SetValue(comp, true);
+        comp.BeginReposition();
+        Assert.IsFalse(btn.activeSelf);
+        Object.DestroyImmediate(btn);
+        Object.DestroyImmediate(go);
+    }
+
+    [Test]
+    public void BeginReposition_NullButton_DoesNotThrow()
+    {
+        var go   = new GameObject("pwop");
+        var comp = go.AddComponent<PlaceWaterOnPlane>();
+        comp.repositionButton = null;
+        Assert.DoesNotThrow(() => comp.BeginReposition());
+        Object.DestroyImmediate(go);
+    }
+}

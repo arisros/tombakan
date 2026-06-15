@@ -9,10 +9,17 @@ public class PlaceWaterOnPlane : MonoBehaviour
     public ARPointCloudManager pointCloudManager;
     public GameObject waterPlane;
 
+    [Header("Reposition UI (optional/null-safe)")]
+    public GameObject repositionButton;   // shown after placement; onClick → BeginReposition()
+
     static List<ARRaycastHit> hits = new();
+
+    bool _placed;
 
     void Update()
     {
+        if (_placed) return;   // locked after placement until BeginReposition() is called
+
         if (Input.touchCount == 0)
             return;
 
@@ -34,8 +41,17 @@ public class PlaceWaterOnPlane : MonoBehaviour
             waterPlane.SetActive(true);
 
             DisableARPlanes();
-            enabled = false; // one-shot placement; prevents mid-game re-positioning
+            _placed = true;
+            if (repositionButton != null) repositionButton.SetActive(true);
         }
+    }
+
+    /// <summary>Re-enables AR plane scanning so the player can tap a new surface.</summary>
+    public void BeginReposition()
+    {
+        _placed = false;
+        if (repositionButton != null) repositionButton.SetActive(false);
+        if (planeManager != null)     planeManager.enabled = true;
     }
 
     void DisableARPlanes()
@@ -55,17 +71,13 @@ public class PlaceWaterOnPlane : MonoBehaviour
                 var collider = plane.GetComponent<MeshCollider>();
                 var feather = plane.GetComponent("ARFeatheredPlaneMeshVisualizer") as Behaviour;
                 if (feather != null)
-                {
                     feather.enabled = false;
-                }
                 if (collider)
                     collider.enabled = false;
             }
         }
 
         if (pointCloudManager != null)
-        {
             pointCloudManager.enabled = false;
-        }
     }
 }

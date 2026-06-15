@@ -1,5 +1,24 @@
 # Iteration Log
 
+## Week 7 addendum — 2026-06-15
+
+**Branch:** `iteration/week-7` (on top of 2026-06-08 Week 7 base)
+**Additional tasks:** 3
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| ADD-1 | Daily-bonus multi-level reward loop — `TombakanOnboarding.Start()` now loops `levelBefore+1..levelAfter` applying all `LevelReward`s; fixes level-skipping on large XP grants | `TombakanOnboarding.cs` |
+| ADD-2 | Zen mode exit button — `GameManager.zenEndButton` (public field); shown in `StartGame` when Zen, hidden in `EndGame`; scene wire pending | `GameManager.cs` |
+| ADD-3 | AR water re-positioning — `PlaceWaterOnPlane._placed` flag replaces `enabled = false`; `BeginReposition()` re-enables plane scanning; optional `repositionButton` UI hook; scene wire pending | `PlaceWaterOnPlane.cs` |
+
+**Tests added:** 4 `PlaceWaterOnPlaneRepositionTests` tests in `Week7Tests.cs`
+
+**Scene wiring required (cannot be done without Unity Editor):**
+- ADD-2: Add "Selesai" Button to gameplay HUD; assign `GameManager.zenEndButton`; `onClick → EndGameManual()`
+- ADD-3: Add "Ubah Posisi" Button to gameplay HUD; assign `PlaceWaterOnPlane.repositionButton`; `onClick → BeginReposition()`
+
+---
+
 ## Week 7 — 2026-06-08
 
 **Branch:** `iteration/week-7`

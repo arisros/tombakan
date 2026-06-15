@@ -130,10 +130,16 @@
 - [x] Throw-mechanic tutorial hint — `TombakanOnboarding.NotifyGameStarted` shows Indonesian hint 2 s after start (zero-throw guard, 5 s auto-dismiss); `SpearThrower.NotifyFirstThrow` dismisses it immediately — `TombakanOnboarding.cs`, `SpearThrower.cs`, `GameManager.cs`
 - [x] `ColorSummary ×1` suppression — single catches show `"Merah"` not `"Merah ×1"` — `ColorSummary.cs`
 
-## Week 8 Candidates (from Week 7 tester report)
+### Week 7 addendum (2026-06-15)
+- [x] Daily-bonus multi-level reward loop — `TombakanOnboarding.Start()` loops `levelBefore+1..levelAfter` — fixes level-skipping on large XP grants — `TombakanOnboarding.cs`
+- [x] Zen mode exit button code — `GameManager.zenEndButton` shown/hidden in `StartGame`/`EndGame` — **scene wire pending** — `GameManager.cs`
+- [x] AR water re-positioning — `PlaceWaterOnPlane._placed` flag + `BeginReposition()` + optional `repositionButton` — **scene wire pending** — `PlaceWaterOnPlane.cs`
+
+## Week 8 Candidates
+- [ ] Scene wiring: add "Selesai" (Zen exit) and "Ubah Posisi" (reposition water) buttons to `GamePlay.unity` in Unity Editor and assign `zenEndButton` / `repositionButton` fields
 - [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
-- [ ] "Re-position water" button — `PlaceWaterOnPlane` re-enable path; one-shot guard blocks mid-game repositioning — needs scene UI work
 - [ ] `GoalManager.ForceCompleteGoal` crash risk — returning player launch could NullRef if step list uninitialised — `GoalManager.cs`, `TombakanOnboarding.cs`
+- [ ] Combo XP formula — reward sustained streaks (track hits at each tier; pass to `ProgressionRules.XpForResult()`) — design review first
 - [ ] Colour-blind target indicator shape — `targetColorImage` shows no shape symbol in CB mode when catalog is active — needs UI label addition
 - [ ] Scene wiring: `TombakanOnboarding.hintPanel` + `hintText` must be assigned in `GamePlay.unity` for throw tutorial to work at runtime
 - [ ] Achievement toast / level-up panel overlap — delay first toast to +3.5 s or add tap-to-dismiss on level-up panel — `GameManager.cs`
