@@ -38,10 +38,9 @@ public static class ColorSummary
                 sb.Append(", ");
 
             string name = order[i];
-            if (counts[name] > 1)
-                sb.Append(name).Append(" ×").Append(counts[name]);
-            else
-                sb.Append(name);
+            int cnt = counts[name];
+            sb.Append(name);
+            if (cnt > 1) sb.Append(" ×").Append(cnt);
         }
 
         return sb.ToString();

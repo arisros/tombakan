@@ -294,8 +294,14 @@ public class GameManager : MonoBehaviour
         // --- Achievements ---
         int levelBeforeAchievements = ProgressionStore.GetLevel();
         if (achievementCatalog != null)
-        {
-            string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
+            newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
+        int levelAfterAch = ProgressionStore.GetLevel();
+        int finalLevel = newLevel > 0 ? newLevel : (levelAfterAch > levelBeforeAch ? levelAfterAch : 0);
+
+        // Stagger badge and level-up panel (0.4 s and 0.8 s after result screen)
+        StartCoroutine(StaggerResultCelebrations(isRecord, finalLevel));
+
+        if (newlyUnlocked.Length > 0)
             StartCoroutine(ShowAchievementsSequenced(newlyUnlocked, achievementCatalog));
         }
         // Achievement XP grants can silently level up; surface with panel + rewards after toasts
@@ -340,6 +346,13 @@ public class GameManager : MonoBehaviour
         levelUpPanel.SetActive(true);
         if (levelUpText != null)
             levelUpText.text = $"Level {newLevel}! Selamat!";
+    }
+
+    public void HandleLevelReward(int newLevel)
+    {
+        if (newLevel <= 0) return;
+        ShowLevelUp(newLevel);
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(newLevel));
     }
 
     System.Collections.IEnumerator StaggerResultCelebrations(bool isRecord, int newLevel)
