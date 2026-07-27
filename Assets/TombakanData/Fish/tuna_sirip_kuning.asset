@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d66aeb43fc4809044a55d6ee05d2c0, type: 3}
+  m_Name: tuna_sirip_kuning
+  m_EditorClassIdentifier:
+  id: tuna_sirip_kuning
+  displayName: Tuna Sirip Kuning
+  englishName: Yellowfin Tuna
+  latinName: Thunnus albacares
+  modelPrefab: {fileID: 0}
+  # ColourBlind audit (TASK-04, week9): h=0.610 s=0.760 v=0.500 -> BLUE(■). UNCHANGED — deep blue body, s>=0.6 v=0.5 satisfied (borderline, passes).
+  baseColor: {r: 0.12, g: 0.25, b: 0.5, a: 1}
+  rarity: 2
+  habitatId:
+  funFact: Tuna sirip kuning bisa berenang dengan kecepatan hingga 75 km/jam dan
+    Indonesia adalah salah satu negara penghasil tuna terbesar di dunia.
+  icon: {fileID: 0}

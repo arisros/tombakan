@@ -1,0 +1,28 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d66aeb43fc4809044a55d6ee05d2c0, type: 3}
+  m_Name: lele
+  m_EditorClassIdentifier:
+  id: lele
+  displayName: Lele
+  englishName: Walking Catfish
+  latinName: Clarias batrachus
+  modelPrefab: {fileID: 0}
+  # ColourBlind audit (TASK-04, week9): UPDATED (0.29,0.25,0.25)->(0.11,0.70,0.20).
+  # Old: s=0.138<0.15 (neutral -> "?") AND v=0.290<0.5 (AR visibility fail). Dark grey
+  # catfish has no usable hue. Recoloured to forest green (h=0.359, GREEN bucket). s=0.843 v=0.700.
+  baseColor: {r: 0.11, g: 0.7, b: 0.2, a: 1}
+  rarity: 0
+  habitatId:
+  funFact: Lele bisa berjalan di darat menggunakan siripnya untuk berpindah ke kolam
+    lain ketika airnya kering!
+  icon: {fileID: 0}

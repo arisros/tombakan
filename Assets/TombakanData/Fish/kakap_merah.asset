@@ -1,0 +1,26 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e4d66aeb43fc4809044a55d6ee05d2c0, type: 3}
+  m_Name: kakap_merah
+  m_EditorClassIdentifier:
+  id: kakap_merah
+  displayName: Kakap Merah
+  englishName: Mangrove Red Snapper
+  latinName: Lutjanus argentimaculatus
+  modelPrefab: {fileID: 0}
+  # ColourBlind audit (TASK-04, week9): h=0.013 s=0.852 v=0.880 -> RED(●). UNCHANGED — primary red species; s>=0.6 v>=0.5 satisfied.
+  baseColor: {r: 0.88, g: 0.19, b: 0.13, a: 1}
+  rarity: 1
+  habitatId:
+  funFact: Kakap merah bisa hidup di air laut maupun air payau, dan merupakan salah
+    satu ikan favorit nelayan Indonesia karena dagingnya yang lezat.
+  icon: {fileID: 0}
