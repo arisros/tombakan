@@ -1,5 +1,29 @@
 # Iteration Log
 
+## Week 9 — 2026-07-27
+
+**Branch:** `iteration/week-9`
+**Tasks completed:** 4
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| TASK-01 | P0 + defensive fixes: (a) null-guard `m_OnboardingGoals` in `GoalManager.CompleteGoal()` — returning-player NRE eliminated; (b) `ShowSad(actualDeduction)` shows `"Meleset!"` when clamp absorbs penalty; (c) `CancelInvoke(nameof(HideFeedback))` at top of `ShowHappy()`/`ShowSad()` prevents stale hide-calls; (d) `targetColorLabel.text` updated after `SpawnFish()` resolves `CurrentTargetSpecies` | `GoalManager.cs`, `GameManager.cs` |
+| TASK-02 | Level-reward propagation + ColourBlind hue-range fix: (a) snapshot level before/after `AchievementChecker.CheckAll()` in `EndGame` — achievement-triggered level-ups now call `ApplyLevelReward`; (b) `ApplyLevelReward` made public; `TombakanOnboarding` calls it when daily-bonus triggers level-up; (c) `ShapeForColor` replaced exact-hex switch with HSV hue-range classifier — no code path returns `"?"` | `GameManager.cs`, `TombakanOnboarding.cs`, `ColourBlindSettings.cs` |
+| TASK-03 | Spawn radius + throw-tutorial panel (scene): serialised `spawnRadius` lowered from 1.5 to 0.8 on `FishSpawner` in `GamePlay.unity`; `ThrowHintPanel` GameObject added under `GamePlayUI` (inactive by default, bottom-centre anchored, Indonesian throw instruction, wired to `GameManager.throwHintPanel`) | `Assets/Scenes/GamePlay.unity` |
+| TASK-04 | FishSpecies colour audit: verified all 8 starter species produce a valid non-`"?"` symbol via new HSV classifier; updated `baseColor` of any species whose hue bucket was over-represented to redistribute across four buckets (s ≥ 0.6, v ≥ 0.5 maintained); 4-symbol limit means 2 species per bucket — same-bucket discrimination deferred to Week 10 `FishCatalog.PickOther` fix | `Assets/ScriptableObjects/FishSpecies/*.asset` |
+
+**Note:** Week 7 and Week 8 were tester-only passes (no code committed); their findings were incorporated into the Week 9 scope.
+
+**Artefacts:** `TESTER_REPORT_week9.md`, `ITERATION_week9_SCOPE.md`,
+`Assets/Tests/EditMode/Week9Task01ScoreLogicTests.cs`,
+`Assets/Tests/EditMode/Week9Task02AchievementLevelUpTests.cs`,
+`Assets/Tests/EditMode/Week9Task02ColourBlindTests.cs`,
+`Assets/Tests/EditMode/Week9Task04SpeciesAuditTests.cs`,
+`Assets/Tests/PlayMode/Week9Task01PlayModeTests.cs`,
+`Assets/Tests/PlayMode/Week9Task03SceneTests.cs`
+
+---
+
 ## Week 6 — 2026-06-03
 
 **Branch:** `iteration/week-6`

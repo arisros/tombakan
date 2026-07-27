@@ -13,17 +13,29 @@ public static class ColourBlindSettings
     public static void SetEnabled(bool v) { PlayerPrefs.SetInt(Key, v ? 1 : 0); PlayerPrefs.Save(); }
     public static void Toggle()       => SetEnabled(!IsEnabled());
 
-    // Maps palette colour → shape symbol shown on fish in colour-blind mode
+    /// <summary>
+    /// Maps any colour to a shape symbol using HSV hue-range classification so that
+    /// all catalog species — not just the four legacy palette colours — get a symbol.
+    /// TASK-02(c): replaces the exact-hex switch that returned "?" for every species colour.
+    ///
+    /// Buckets (hue in [0, 1)):
+    ///   h &lt; 0.083 or h &gt; 0.917  →  ● (red)
+    ///   h &lt; 0.250               →  ★ (orange / yellow)
+    ///   h &lt; 0.458               →  ▲ (green)
+    ///   otherwise               →  ■ (blue / cyan / purple)
+    ///
+    /// Low-saturation (s &lt; 0.15) override: near-greyscale colours map to ■.
+    /// </summary>
     public static string ShapeForColor(Color color)
     {
-        string hex = ColorUtility.ToHtmlStringRGB(color).ToUpperInvariant();
-        return hex switch
-        {
-            "FF0000" => "●",   // Merah
-            "00FF00" => "▲",   // Hijau
-            "0000FF" => "■",   // Biru
-            "FFFF00" => "★",   // Kuning
-            _        => "?",
-        };
+        Color.RGBToHSV(color, out float h, out float s, out float _);
+
+        // Near-greyscale: hue is meaningless, pick a neutral symbol.
+        if (s < 0.15f) return "■";
+
+        if (h < 0.083f || h > 0.917f) return "●";   // red
+        if (h < 0.250f)               return "★";   // orange / yellow
+        if (h < 0.458f)               return "▲";   // green
+        return                                "■";   // blue / cyan / purple
     }
 }

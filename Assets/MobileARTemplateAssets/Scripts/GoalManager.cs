@@ -194,6 +194,14 @@ public class GoalManager : MonoBehaviour
 
     void CompleteGoal()
     {
+        // TASK-01(a): Guard against null queue — happens when ForceCompleteGoal() is
+        // called for returning players before StartCoaching() has initialised the queue.
+        if (m_OnboardingGoals == null)
+        {
+            m_AllGoalsFinished = true;
+            return;
+        }
+
         if (m_CurrentGoal.CurrentGoal == OnboardingGoals.TapSurface)
             m_ObjectSpawner.objectSpawned -= OnObjectSpawned;
 

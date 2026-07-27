@@ -11,6 +11,8 @@ public class TombakanOnboarding : MonoBehaviour
 {
     [Header("References")]
     public GoalManager goalManager;          // the AR template onboarding manager
+    // TASK-02(b): needed to apply level rewards that come from daily-bonus XP grants.
+    public GameManager gameManager;
 
     [Header("Greeting UI (optional)")]
     public GameObject greetingPanel;         // shown on first-ever launch
@@ -41,6 +43,11 @@ public class TombakanOnboarding : MonoBehaviour
             int levelAfter = ProgressionStore.GetLevel();
             int newLevel = levelAfter > levelBefore ? levelAfter : 0;
             ShowDailyBonus(xp, streak, newLevel);
+            // TASK-02(b): Apply the level reward so coins/unlocks from a daily-bonus
+            // level-up are granted within the 3 s bonus panel window.
+            if (newLevel > 0 && gameManager != null)
+                gameManager.ApplyLevelReward(
+                    gameManager.levelRewardTable?.GetRewardForLevel(newLevel));
         }
     }
 

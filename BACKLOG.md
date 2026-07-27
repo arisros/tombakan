@@ -122,8 +122,30 @@
 - [x] Result celebrations staggered — badge at +0.4 s, level-up panel at +0.8 s
 - [x] `AchievementToastPanel` + `AchievementToastText` added to scene, wired to `GameManager`
 
-## Week 7 Candidates (from Week 6 tester report)
-- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` coaching step + hint panel ("Sentuh tombol untuk melempar tombak")
+### Week 9 (2026-07-27)
+- [x] `GoalManager.CompleteGoal()` null-guard — returning-player NRE eliminated
+- [x] `ShowSad(actualDeduction)` — shows `"Meleset!"` when clamp absorbs full penalty
+- [x] `CancelInvoke(nameof(HideFeedback))` in `ShowHappy()`/`ShowSad()` — stale hide-calls cancelled
+- [x] `targetColorLabel.text` updated post-spawn when `CurrentTargetSpecies` is resolved
+- [x] Achievement-triggered level-up reward propagation — level snapshot before/after `AchievementChecker.CheckAll()` in `EndGame`
+- [x] Daily-bonus level reward via `TombakanOnboarding` — `ApplyLevelReward` called when `newLevel > 0`
+- [x] `ColourBlindSettings.ShapeForColor` — HSV hue-range classifier; no `"?"` fallback for any colour
+- [x] `FishSpawner.spawnRadius` serialised to 0.8 in `GamePlay.unity` (was 1.5)
+- [x] `ThrowHintPanel` added to scene under `GamePlayUI` — inactive by default, wired to `GameManager.throwHintPanel`
+- [x] FishSpecies colour audit — 8 starter species redistributed across four HSV hue buckets (s ≥ 0.6, v ≥ 0.5)
+
+## Week 10 Candidates (from Week 9 tester report)
+- [ ] `FishCatalog.PickOther` — replace retry loop with deterministic filtered-list pick (BUG-W8-3) — `FishCatalog.cs:36-44`
+- [ ] `FishCatalog.PickOther` — add same-symbol-bucket exclusion so colour-blind players never see two fish with the same shape in one round (BUG-W9-1) — `FishCatalog.cs`, `ColourBlindSettings.cs`
+- [ ] `GameManager.StartGame()` — activate `ThrowHintPanel` for 8 s on first session (UX-1 code side) — `GameManager.cs:218-230`
+- [ ] `TombakanOnboarding` — ordering guard: defer `dailyBonusPanel` until after `DismissGreeting()` (UX-NEW-2) — `TombakanOnboarding.cs:24-44`
+- [ ] Achievement toast — delay to +3.5 s or add tap-to-dismiss on level-up panel (UX-NEW-3) — `GameManager.cs:344,354`
+- [ ] `targetColorLabel` — show `FishSpecies.displayName` instead of hex fallback when catalog is active (UX-NEW-4) — `GameManager.cs:406`, `Dict.cs:35`
+- [ ] `ColorSummary.Format` — suppress `×1` for single catches (POLISH-NEW-1) — `ColorSummary.cs:41`
+- [ ] `TombakanOnboarding` — call `ProgressionHUD.Refresh()` after `ShowDailyBonus()` (POLISH-W8-1) — `TombakanOnboarding.cs:39-44`
+
+## Week 7 Candidates (from Week 6 tester report — superseded by Week 9)
+- [x] Throw-mechanic tutorial hint for first-time players (UX-1) — `ThrowHintPanel` added to scene in Week 9 (code activation deferred to Week 10)
 - [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
 - [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02 partial from Week 5)
-- [ ] `DailyChallenge.TryClaimDailyBonus` — propagate level-up return value to caller so rewards are applied (BUG-2 partial — TombakanOnboarding fixed; DailyChallenge.cs:58 reward grant still skipped)
+- [x] `DailyChallenge.TryClaimDailyBonus` level-up reward — fixed in Week 9 via `TombakanOnboarding` `ApplyLevelReward` call

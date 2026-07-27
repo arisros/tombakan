@@ -85,6 +85,9 @@ public class GameManager : MonoBehaviour
     public GameObject achievementToastPanel;
     public TMP_Text achievementToastText;
 
+    [Header("Throw Hint (optional/null-safe)")]
+    public GameObject throwHintPanel;
+
     // --- Internal state ---
 
     Color targetColor;
@@ -285,10 +288,21 @@ public class GameManager : MonoBehaviour
         StartCoroutine(StaggerResultCelebrations(isRecord, newLevel));
 
         // --- Achievements ---
+        // TASK-02(a): Snapshot level before and after CheckAll so XP granted by
+        // achievement rewards (inside AchievementChecker) is not silently discarded.
         if (achievementCatalog != null)
         {
+            int levelBeforeAch = ProgressionStore.GetLevel();
             string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
+            int levelAfterAch = ProgressionStore.GetLevel();
             StartCoroutine(ShowAchievementsSequenced(newlyUnlocked, achievementCatalog));
+
+            if (levelAfterAch > levelBeforeAch)
+            {
+                ShowLevelUp(levelAfterAch);
+                ApplyLevelReward(levelRewardTable?.GetRewardForLevel(levelAfterAch));
+                RefreshProgressionHUD();
+            }
         }
 
         if (timerPulseRoutine != null)
@@ -371,7 +385,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    void ApplyLevelReward(LevelReward reward)
+    // TASK-02(b): public so TombakanOnboarding can call it for daily-bonus level-ups.
+    public void ApplyLevelReward(LevelReward reward)
     {
         if (reward == null) return;
 
@@ -408,11 +423,14 @@ public class GameManager : MonoBehaviour
         fishSpawner.fishCount = FishCountForDifficulty(correctHitCount);
         fishSpawner.SpawnFish(targetColor, activeColors);
 
-        // Update target UI with resolved species colour/name now that SpawnFish has run
+        // TASK-01(d): Update target UI with resolved species colour/name now that
+        // SpawnFish has run, so label and swatch stay in sync in catalog mode.
         if (fishSpawner.CurrentTargetSpecies != null)
         {
             targetColor = fishSpawner.CurrentTargetSpecies.baseColor;
             targetColorImage.color = targetColor;
+            if (targetColorLabel != null)
+                targetColorLabel.text = ColorHexLocalization.ToIndonesian(targetColor);
         }
 
         if (targetSpeciesLabel != null)
@@ -472,8 +490,12 @@ public class GameManager : MonoBehaviour
         {
             comboStreak = 0;
             wrongHitCount++;
+            // TASK-01(b): Track actual deduction so ShowSad can display "Meleset!" when
+            // ClampScore fully absorbs the penalty (e.g. score is already 0).
+            int scoreBefore = score;
             score = ClampScore(score - penaltyPerWrongHit);
-            ShowSad();
+            int actualDeduction = scoreBefore - score;
+            ShowSad(actualDeduction);
             if (AudioManager.I != null) AudioManager.I.PlayWrong();
             if (ScreenShake.I != null) ScreenShake.I.ShakeOnWrong();
             HapticFeedback.PlayWrong();
@@ -495,6 +517,9 @@ public class GameManager : MonoBehaviour
 
     void ShowHappy(int earned, int multiplier)
     {
+        // TASK-01(c): Cancel any pending HideFeedback so rapid consecutive hits each
+        // display for the full 1 s duration rather than a stale call cutting them short.
+        CancelInvoke(nameof(HideFeedback));
         happyFeedback.SetActive(true);
         happyFeedbackText.text = multiplier > 1
             ? $"x{multiplier} COMBO! +{earned}!"
@@ -502,10 +527,12 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(HideFeedback), 1f);
     }
 
-    void ShowSad()
+    // TASK-01(b+c): Accept actual deduction; show "Meleset!" when fully absorbed.
+    void ShowSad(int actualDeduction)
     {
+        CancelInvoke(nameof(HideFeedback));
         sadFeedback.SetActive(true);
-        sadFeedbackText.text = $"-{penaltyPerWrongHit}!";
+        sadFeedbackText.text = actualDeduction == 0 ? "Meleset!" : $"-{actualDeduction}!";
         Invoke(nameof(HideFeedback), 1f);
     }
 
