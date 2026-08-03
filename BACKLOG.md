@@ -122,8 +122,21 @@
 - [x] Result celebrations staggered — badge at +0.4 s, level-up panel at +0.8 s
 - [x] `AchievementToastPanel` + `AchievementToastText` added to scene, wired to `GameManager`
 
-## Week 7 Candidates (from Week 6 tester report)
-- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` coaching step + hint panel ("Sentuh tombol untuk melempar tombak")
-- [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
-- [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02 partial from Week 5)
-- [ ] `DailyChallenge.TryClaimDailyBonus` — propagate level-up return value to caller so rewards are applied (BUG-2 partial — TombakanOnboarding fixed; DailyChallenge.cs:58 reward grant still skipped)
+### Week 9 (2026-08-03)
+- [x] `GoalManager.IsCoachingActive` property — null-safe guard prevents NullReferenceException crash for all returning-player launches
+- [x] `AchievementChecker.CheckAll` — `out int levelGained` overloads capture `ProgressionStore.AddXp` return value; achievement XP level-up merged into `newLevel` before `StaggerResultCelebrations`
+- [x] `DailyChallenge.TryClaimDailyBonus` — `out int newLevel` parameter surfaces level from daily bonus XP; return value no longer discarded
+- [x] `GameManager.ApplyLevelReward(int)` — public overload exposed for external callers (TombakanOnboarding, future scripts)
+- [x] Achievement eval moved before `StaggerResultCelebrations` in `EndGame` — all level-up sources merged before UI fires
+- [x] `TombakanOnboarding` — deferred daily-bonus panel via `_pendingBonus` fields; `ApplyLevelReward` called on both immediate and deferred paths
+- [x] `ShowSad(actualDeduction)` — returns early when deduction is 0; misleading `"-25!"` no longer shown when score floor absorbs the penalty
+- [x] `Week9AcceptanceTests.cs` + `IterationPlayModeTests.cs` + backfilled Week1–6AcceptanceTests.cs
+
+### Week 10 Candidates (from Week 9 tester report)
+- [ ] **BUG-NEW-3 (HIGH)** — `ColourBlindSettings.ShapeForColor` returns `"?"` for any `FishSpecies.baseColor` outside the four-entry switch; colour-blind mode non-functional with FishCatalog — `ColourBlindSettings.cs:22-27` — fix: approximate-colour matching or per-species `accessibilityShape` field in `FishSpecies`
+- [ ] **BUG-W8-2 (MED)** — `PlaceWaterOnPlane.Update()` does not guard against UI-overlapping touches; tapping a HUD button during AR plane detection places water at unintended position — `PlaceWaterOnPlane.cs:18-38` — fix: add `EventSystem.current.IsPointerOverGameObject(touch.fingerId)` guard before AR raycast
+- [ ] **BUG-W8-3 (MED)** — `FishSwim.swimCenter` set to fish spawn position; corner-spawned fish roam outside typical AR play space at high difficulty — `FishSwim.cs:34`, `FishSpawner.cs:72` — fix: pass `waterPlane.transform.position` to each fish at spawn and use it as `swimCenter`
+- [ ] **UX-NEW-3 (MED)** — Achievement toast fires at +1.2 s after EndGame, only 0.4 s after level-up panel; both visible simultaneously — `GameManager.cs:344,354` — fix: delay toast to +4.0 s or add tap-to-dismiss on level-up panel
+- [ ] **UX-1 (LOW-MED)** — No throw-mechanic tutorial for first-time players — fix: 10 s hint panel ("Tekan tombol untuk melempar!") on first `GameManager.StartGame()` call
+- [ ] **POLISH-NEW-2 (LOW)** — `ProgressionHUD.Refresh()` not called after daily-bonus XP; XP bar stale on main screen — fix: call from `TombakanOnboarding` after `ShowDailyBonus`
+- [ ] **POLISH-NEW-1 (LOW)** — `ColorSummary.Format` shows `×N` for every count including 1 — fix: suppress suffix when N=1 at `ColorSummary.cs:41`

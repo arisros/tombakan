@@ -180,6 +180,13 @@ public class GoalManager : MonoBehaviour
     int m_SurfacesTapped;
     int m_CurrentGoalIndex = 0;
 
+    /// <summary>
+    /// True when <see cref="StartCoaching"/> has been called and goals are still in progress.
+    /// Use this guard before calling <see cref="ForceCompleteGoal"/> from external scripts
+    /// to avoid a NullReferenceException when m_OnboardingGoals has not been initialised.
+    /// </summary>
+    public bool IsCoachingActive => m_OnboardingGoals != null && !m_AllGoalsFinished;
+
     void Update()
     {
         if (Pointer.current != null && Pointer.current.press.wasPressedThisFrame && !m_AllGoalsFinished && (m_CurrentGoal.CurrentGoal == OnboardingGoals.FindSurfaces || m_CurrentGoal.CurrentGoal == OnboardingGoals.Hints || m_CurrentGoal.CurrentGoal == OnboardingGoals.Scale))
@@ -199,7 +206,7 @@ public class GoalManager : MonoBehaviour
 
         m_CurrentGoal.Completed = true;
         m_CurrentGoalIndex++;
-        if (m_OnboardingGoals.Count > 0)
+        if (m_OnboardingGoals != null && m_OnboardingGoals.Count > 0)
         {
             m_CurrentGoal = m_OnboardingGoals.Dequeue();
             m_StepList[m_CurrentGoalIndex - 1].stepObject.SetActive(false);

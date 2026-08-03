@@ -20,27 +20,51 @@ public class TombakanOnboarding : MonoBehaviour
     [Header("Settings")]
     public bool skipOnboardingForReturning = true; // if true, veteran players skip AR steps
 
+    // Pending daily bonus data — populated when greeting is blocking
+    bool   _pendingBonus;
+    int    _pendingXp;
+    int    _pendingStreak;
+    int    _pendingNewLevel;
+
     void Start()
     {
         bool isReturningPlayer = ScoreStore.GetBest() > 0 || ProgressionStore.GetTotalXp() > 0;
 
         if (isReturningPlayer && skipOnboardingForReturning && goalManager != null)
         {
-            // Fast-forward through all coaching steps
-            goalManager.ForceCompleteGoal();
+            // Only fast-forward when coaching has been initialised; calling
+            // ForceCompleteGoal before StartCoaching populates m_OnboardingGoals
+            // causes a NullReferenceException on returning-player launches (TASK-01).
+            if (goalManager.IsCoachingActive)
+                goalManager.ForceCompleteGoal();
         }
         else if (!isReturningPlayer && greetingPanel != null)
         {
             greetingPanel.SetActive(true);
         }
 
-        // Check for daily bonus — claim on every session start
-        int levelBefore = ProgressionStore.GetLevel();
-        if (DailyChallenge.TryClaimDailyBonus(out int xp, out int streak))
+        // Check for daily bonus — claim on every session start.
+        // TryClaimDailyBonus now surfaces the new level directly so we no longer
+        // need a manual before/after GetLevel snapshot (TASK-02b).
+        if (DailyChallenge.TryClaimDailyBonus(out int xp, out int streak, out int newLevel))
         {
-            int levelAfter = ProgressionStore.GetLevel();
-            int newLevel = levelAfter > levelBefore ? levelAfter : 0;
-            ShowDailyBonus(xp, streak, newLevel);
+            // If the greeting panel is currently visible, defer the bonus until it is dismissed
+            bool greetingVisible = greetingPanel != null && greetingPanel.activeSelf;
+            if (greetingVisible)
+            {
+                _pendingBonus    = true;
+                _pendingXp       = xp;
+                _pendingStreak   = streak;
+                _pendingNewLevel = newLevel;
+            }
+            else
+            {
+                ShowDailyBonus(xp, streak, newLevel);
+                // Apply LevelRewardTable reward (coins, species unlock, spear skin)
+                // so it is never silently skipped on a daily-bonus level-up (TASK-02c).
+                if (newLevel > 0)
+                    GameManager.I?.ApplyLevelReward(newLevel);
+            }
         }
     }
 
@@ -72,5 +96,15 @@ public class TombakanOnboarding : MonoBehaviour
     {
         if (greetingPanel != null) greetingPanel.SetActive(false);
         if (goalManager  != null) goalManager.StartCoaching();
+
+        // Show any daily bonus that was deferred while the greeting was visible
+        if (_pendingBonus)
+        {
+            _pendingBonus = false;
+            ShowDailyBonus(_pendingXp, _pendingStreak, _pendingNewLevel);
+            // Apply LevelRewardTable reward deferred alongside the panel (TASK-02c).
+            if (_pendingNewLevel > 0)
+                GameManager.I?.ApplyLevelReward(_pendingNewLevel);
+        }
     }
 }

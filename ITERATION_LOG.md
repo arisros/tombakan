@@ -1,5 +1,22 @@
 # Iteration Log
 
+## Week 9 — 2026-08-03
+
+**Branch:** `iteration/week-9`
+**Tasks completed:** 3
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| TASK-01 | P0 crash fix — `GoalManager` null-dereference on returning-player launch; added `IsCoachingActive` property + null-guard in `CompleteGoal()`; `TombakanOnboarding.ForceCompleteGoal()` now only called when coaching is active | `GoalManager.cs`, `TombakanOnboarding.cs` |
+| TASK-02 | Propagate `ProgressionStore.AddXp` return value in achievement and daily-bonus paths; `AchievementChecker` gains `out int levelGained` overloads; `DailyChallenge.TryClaimDailyBonus` exposes `out int newLevel`; `GameManager.ApplyLevelReward(int)` made public; achievement eval moved before `StaggerResultCelebrations` so all level-ups merge before UI fires | `AchievementChecker.cs`, `DailyChallenge.cs`, `GameManager.cs`, `TombakanOnboarding.cs` |
+| TASK-03 | Fix overlapping onboarding panels and misleading clamped-penalty text; daily-bonus panel deferred via `_pendingBonus` fields until greeting is dismissed; `ShowSad(actualDeduction)` returns early when deduction is 0 (score floor absorbed penalty) | `TombakanOnboarding.cs`, `GameManager.cs` |
+
+**Artefacts:** `TESTER_REPORT_week9.md`, `ITERATION_week9_SCOPE.md`,
+`Assets/Tests/EditMode/Week9AcceptanceTests.cs`, `Assets/Tests/PlayMode/IterationPlayModeTests.cs`,
+`Assets/Tests/EditMode/Week1-6AcceptanceTests.cs` (backfilled)
+
+---
+
 ## Week 6 — 2026-06-03
 
 **Branch:** `iteration/week-6`

@@ -29,7 +29,18 @@ public static class DailyChallenge
 
     static string Today => DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-    public static bool TryClaimDailyBonus(out int xpAwarded, out int streak)
+    /// <summary>
+    /// Attempts to claim the daily login bonus for today.
+    /// </summary>
+    /// <param name="xpAwarded">XP granted if the claim succeeds, otherwise 0.</param>
+    /// <param name="streak">Current consecutive-day streak count.</param>
+    /// <param name="newLevel">
+    /// The new level if the XP caused a level-up; 0 if no level-up occurred.
+    /// Pass this to <see cref="GameManager.ApplyLevelReward(int)"/> to materialise
+    /// any configured LevelRewardTable reward (coins, species unlock, spear skin).
+    /// </param>
+    /// <returns>True when a bonus was claimed (first play of the calendar day).</returns>
+    public static bool TryClaimDailyBonus(out int xpAwarded, out int streak, out int newLevel)
     {
         string lastPlayed = PlayerPrefs.GetString(LastPlayedKey, "");
         string today      = Today;
@@ -38,6 +49,7 @@ public static class DailyChallenge
         {
             xpAwarded = 0;
             streak    = PlayerPrefs.GetInt(StreakKey, 0);
+            newLevel  = 0;
             return false;
         }
 
@@ -55,7 +67,9 @@ public static class DailyChallenge
         PlayerPrefs.SetInt(StreakKey, streak);
         PlayerPrefs.Save();
 
-        ProgressionStore.AddXp(xpAwarded);
+        // Capture the return value so callers can surface a level-up celebration
+        // and apply the LevelRewardTable reward (TASK-02b).
+        newLevel = ProgressionStore.AddXp(xpAwarded);
         return true;
     }
 

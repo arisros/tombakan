@@ -34,9 +34,28 @@ public static class AchievementChecker
     /// <summary>
     /// Convenience overload: reads session data from <paramref name="gm"/> and
     /// live stores, then delegates to <see cref="CheckAll(AchievementSession, AchievementCatalog)"/>.
+    /// Backward-compatible overload — discards the level-up return value.
+    /// Prefer <see cref="CheckAll(GameManager, AchievementCatalog, out int)"/> in EndGame
+    /// so any XP-triggered level-up is merged before calling StaggerResultCelebrations.
     /// </summary>
     public static string[] CheckAll(GameManager gm, AchievementCatalog catalog)
     {
+        int unused;
+        return CheckAll(gm, catalog, out unused);
+    }
+
+    /// <summary>
+    /// Reads session data from <paramref name="gm"/> and live stores, evaluates all
+    /// achievement conditions, and reports any XP-triggered level-up via
+    /// <paramref name="levelGained"/> so the caller can merge it before showing
+    /// level-up UI (TASK-02a).
+    /// </summary>
+    /// <param name="levelGained">
+    /// The new level if any achievement XP reward caused a level-up; 0 otherwise.
+    /// </param>
+    public static string[] CheckAll(GameManager gm, AchievementCatalog catalog, out int levelGained)
+    {
+        levelGained = 0;
         if (gm == null) return new string[0];
 
         var session = new AchievementSession
@@ -48,7 +67,7 @@ public static class AchievementChecker
             fishdexUnlockedCount = FishdexStore.UnlockedCount(),
         };
 
-        return CheckAll(session, catalog);
+        return CheckAll(session, catalog, out levelGained);
     }
 
     // ── Pure / testable entry point ───────────────────────────────────────────
@@ -57,12 +76,34 @@ public static class AchievementChecker
     /// Checks all achievement conditions against the supplied session snapshot.
     /// Only unlocks achievements not already unlocked, and grants XP if a catalog
     /// is provided.
+    /// Backward-compatible overload — discards the level-up return value.
     /// </summary>
     /// <param name="session">End-of-session snapshot.</param>
     /// <param name="catalog">Optional; pass null to skip XP reward grant.</param>
     /// <returns>Array of achievement ids newly unlocked during this call.</returns>
     public static string[] CheckAll(AchievementSession session, AchievementCatalog catalog)
     {
+        int unused;
+        return CheckAll(session, catalog, out unused);
+    }
+
+    /// <summary>
+    /// Checks all achievement conditions against the supplied session snapshot.
+    /// Only unlocks achievements not already unlocked, and grants XP if a catalog
+    /// is provided. Reports any XP-triggered level-up via <paramref name="levelGained"/>
+    /// so EndGame can merge it into newLevel before calling StaggerResultCelebrations
+    /// and ApplyLevelReward (TASK-02a).
+    /// </summary>
+    /// <param name="session">End-of-session snapshot.</param>
+    /// <param name="catalog">Optional; pass null to skip XP reward grant.</param>
+    /// <param name="levelGained">
+    /// The highest new level reached via achievement XP rewards; 0 if no level-up.
+    /// </param>
+    /// <returns>Array of achievement ids newly unlocked during this call.</returns>
+    public static string[] CheckAll(AchievementSession session, AchievementCatalog catalog, out int levelGained)
+    {
+        levelGained = 0;
+
         // Register all known ids so GetAllUnlocked can discover them.
         RegisterAllKnownIds();
 
@@ -92,12 +133,16 @@ public static class AchievementChecker
             AchievementStore.Unlock(id);
             newlyUnlocked.Add(id);
 
-            // Grant XP reward if catalog is provided.
+            // Grant XP reward if catalog is provided; capture any level-up
+            // so it can be propagated to the caller (TASK-02a).
             if (catalog != null)
             {
                 Achievement achievement = catalog.GetById(id);
                 if (achievement != null && achievement.xpReward > 0)
-                    ProgressionStore.AddXp(achievement.xpReward);
+                {
+                    int lvUp = ProgressionStore.AddXp(achievement.xpReward);
+                    if (lvUp > levelGained) levelGained = lvUp;
+                }
             }
         }
 

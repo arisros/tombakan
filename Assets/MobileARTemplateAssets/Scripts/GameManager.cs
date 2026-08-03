@@ -281,15 +281,17 @@ public class GameManager : MonoBehaviour
 
         RefreshProgressionHUD();
 
-        // Stagger badge and level-up panel (0.4 s and 0.8 s after result screen)
-        StartCoroutine(StaggerResultCelebrations(isRecord, newLevel));
-
-        // --- Achievements ---
+        // --- Achievements (evaluated before celebrations so any XP level-up is merged
+        //     into newLevel before StaggerResultCelebrations runs) (TASK-02a) ---
         if (achievementCatalog != null)
         {
-            string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
+            string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog, out int achievementLevel);
+            if (achievementLevel > newLevel) newLevel = achievementLevel;
             StartCoroutine(ShowAchievementsSequenced(newlyUnlocked, achievementCatalog));
         }
+
+        // Stagger badge and level-up panel (0.4 s and 0.8 s after result screen)
+        StartCoroutine(StaggerResultCelebrations(isRecord, newLevel));
 
         if (timerPulseRoutine != null)
         {
@@ -369,6 +371,19 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(2f);
             achievementToastPanel.SetActive(false);
         }
+    }
+
+    /// <summary>
+    /// Shows the level-up panel and applies the configured LevelRewardTable reward
+    /// (coins, species unlock, spear skin) for the given level.
+    /// Public so external scripts (e.g. TombakanOnboarding) can surface a level-up
+    /// that occurs outside the normal EndGame flow (TASK-02c).
+    /// </summary>
+    public void ApplyLevelReward(int level)
+    {
+        if (level <= 0) return;
+        ShowLevelUp(level);
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(level));
     }
 
     void ApplyLevelReward(LevelReward reward)
@@ -472,8 +487,10 @@ public class GameManager : MonoBehaviour
         {
             comboStreak = 0;
             wrongHitCount++;
+            int scoreBefore = score;
             score = ClampScore(score - penaltyPerWrongHit);
-            ShowSad();
+            int actualDeduction = scoreBefore - score;
+            ShowSad(actualDeduction);
             if (AudioManager.I != null) AudioManager.I.PlayWrong();
             if (ScreenShake.I != null) ScreenShake.I.ShakeOnWrong();
             HapticFeedback.PlayWrong();
@@ -502,10 +519,13 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(HideFeedback), 1f);
     }
 
-    void ShowSad()
+    void ShowSad(int actualDeduction)
     {
+        // If score was already at the floor (0), suppress the penalty feedback entirely
+        if (actualDeduction <= 0) return;
+
         sadFeedback.SetActive(true);
-        sadFeedbackText.text = $"-{penaltyPerWrongHit}!";
+        sadFeedbackText.text = $"-{actualDeduction}!";
         Invoke(nameof(HideFeedback), 1f);
     }
 
