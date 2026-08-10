@@ -159,7 +159,10 @@ public class GameManager : MonoBehaviour
 
         timeLeft -= Time.unscaledDeltaTime;
 
-        timerBarFill.fillAmount = Mathf.Clamp01(timeLeft / gameDuration);
+        // BUG-4: use Mathf.Max(timeLeft, gameDuration) as denominator so bonus time
+        // above gameDuration never pushes fillAmount past 1 while still correctly
+        // scaling down as timeLeft falls back through gameDuration.
+        timerBarFill.fillAmount = Mathf.Clamp01(timeLeft / Mathf.Max(timeLeft, gameDuration));
 
         if (timerCountdownText != null)
             timerCountdownText.text = Mathf.CeilToInt(Mathf.Max(0f, timeLeft)).ToString();
@@ -415,17 +418,31 @@ public class GameManager : MonoBehaviour
         targetColor      = active[Random.Range(0, active.Length)];
 
         targetColorImage.color = targetColor;
-        if (targetColorLabel != null)
-            targetColorLabel.text = ColorHexLocalization.ToIndonesian(targetColor);
 
         fishSpawner.fishCount = FishCountForDifficulty(correctHitCount);
         fishSpawner.SpawnFish(targetColor, activeColors);
 
-        // Update target UI with resolved species colour/name now that SpawnFish has run
+        // BUG-6: re-sync colour swatch and label after SpawnFish has resolved any
+        // catalog-species colour override, so targetColorImage and targetColorLabel
+        // always agree.
         if (fishSpawner.CurrentTargetSpecies != null)
         {
             targetColor = fishSpawner.CurrentTargetSpecies.baseColor;
             targetColorImage.color = targetColor;
+        }
+
+        if (targetColorLabel != null)
+        {
+            // BUG-6: prefer species displayName in catalog mode; fall back to hex-lookup.
+            string labelText = fishSpawner.CurrentTargetSpecies != null
+                ? fishSpawner.CurrentTargetSpecies.displayName
+                : ColorHexLocalization.ToIndonesian(targetColor);
+
+            // BUG-7: append shape symbol when colour-blind mode is active.
+            if (ColourBlindSettings.IsEnabled())
+                labelText = $"{labelText} {ColourBlindSettings.ShapeForColor(targetColor)}";
+
+            targetColorLabel.text = labelText;
         }
 
         if (targetSpeciesLabel != null)

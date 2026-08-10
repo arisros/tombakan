@@ -122,8 +122,23 @@
 - [x] Result celebrations staggered — badge at +0.4 s, level-up panel at +0.8 s
 - [x] `AchievementToastPanel` + `AchievementToastText` added to scene, wired to `GameManager`
 
-## Week 7 Candidates (from Week 6 tester report)
-- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` coaching step + hint panel ("Sentuh tombol untuk melempar tombak")
-- [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
-- [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02 partial from Week 5)
-- [ ] `DailyChallenge.TryClaimDailyBonus` — propagate level-up return value to caller so rewards are applied (BUG-2 partial — TombakanOnboarding fixed; DailyChallenge.cs:58 reward grant still skipped)
+### Week 8 (2026-08-10)
+- [x] `DailyChallenge.TryClaimDailyBonus` — capture `AddXp` return via `out int newLevel`; `TombakanOnboarding` calls `ApplyLevelReward` when non-zero (BUG-1 CRITICAL)
+- [x] `AchievementChecker.CheckAll` — capture `AddXp` return; call `GameManager.I?.ApplyLevelReward(newLevel)` on level-up (BUG-2 HIGH)
+- [x] `GoalManager.CompleteGoal` null guard — `if (m_OnboardingGoals == null) return` prevents NRE for returning players (BUG-8 MEDIUM)
+- [x] Throw-lock / fish-spawn gap eliminated — `GameConstants.SpawnDelay = 0.8f` extracted; `LockThrow` and `PickNewTarget` invoke use same constant (BUG-3 HIGH)
+- [x] `targetColorLabel` re-synced after species colour override; catalog mode uses `species.displayName` (BUG-6 MEDIUM)
+- [x] Colour-blind shape symbol appended to HUD target label when `ColourBlindSettings.IsEnabled()` (BUG-7 MEDIUM)
+- [x] `Assets/Prefabs/UI/MissText.prefab` created — World Space Canvas, Animator scale-in/fade-out, "Meleset!" warm-orange text (BUG-10 — prefab ready; wire-up deferred)
+- [x] `GameManager.ApplyLevelReward(int newLevel)` public overload added — callable without MonoBehaviour dependency
+
+## Week 9 Candidates (from Week 8 tester report)
+- [ ] **Timer bar bonus-zone fix (BUG-4 P0)** — cap `timeLeft` at `gameDuration * 1.5f` on bonus addition; or implement two-zone bar (normal + bonus glow overlay) so visual pacing remains useful for skilled players with large bonus time
+- [ ] **Wire MissText.prefab in SpearHit (BUG-10 wire, P1)** — add `[SerializeField] GameObject missTextPrefab` to `SpearHit`; in `OnDestroy` when `!hasHit` instantiate prefab at last position; Inspector assignment
+- [ ] **Throw-mechanic tutorial hint (UX-1, P1)** — timed hint panel "Tekan tombol untuk melempar tombak!" shown for 8 s on `StartGame()` for `!isReturningPlayer`; add as `TombakanOnboarding` coaching step
+- [ ] `ColourBlindSettings.ShapeForColor` — expand to all catalog species colours, or derive shape from species catalog index (BUG-5 MEDIUM)
+- [ ] `ShowSad` — compute `actualDeduction = score - ClampScore(score - penalty)`; show "Salah!" when `actualDeduction == 0` instead of "-25!" (BUG-9 LOW-MED)
+- [ ] `TombakanOnboarding` — trigger daily-bonus check only after `greetingPanel` dismissal to prevent simultaneous panel overlap (UX-2)
+- [ ] Achievement toast delay — push to +3.0 s after result screen so level-up panel is readable for ≥2 s before toast fires (UX-3)
+- [ ] Platform-specific haptic differentiation — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS (POLISH-2; requires device test matrix)
+- [ ] "Re-position water" button — complement the one-shot placement guard (carry from Week 7 candidates)

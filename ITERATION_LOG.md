@@ -1,5 +1,21 @@
 # Iteration Log
 
+## Week 8 — 2026-08-10
+
+**Branch:** `iteration/week-8`
+**Tasks completed:** 4
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| TASK-01 | BUG-1/BUG-2: Capture `ProgressionStore.AddXp` return in `DailyChallenge.TryClaimDailyBonus` (out param) and `AchievementChecker.CheckAll`; call `GameManager.ApplyLevelReward` when `newLevel > 0`; public `ApplyLevelReward(int)` overload added | `DailyChallenge.cs`, `TombakanOnboarding.cs`, `AchievementChecker.cs`, `GameManager.cs`, `DailyChallengeProgressionTests.cs` (new), `AchievementCheckerProgressionTests.cs` (new) |
+| TASK-02 | BUG-8: `GoalManager.CompleteGoal` null guard (`if (m_OnboardingGoals == null) return`); BUG-3: Extract `GameConstants.SpawnDelay = 0.8f`; align `LockThrow(delay + SpawnDelay)` with `Invoke(PickNewTarget, delay + SpawnDelay)` — zero-fish throw window eliminated | `GoalManager.cs`, `GameConstants.cs` (new constant), `GameManager.cs`, `TombakanOnboarding.cs`, `GoalManagerTests.cs` (new) |
+| TASK-03 | BUG-4: Timer bar denominator changed to `Mathf.Max(timeLeft, gameDuration)` (improved calibration; full fix deferred); BUG-6: `targetColorLabel` moved to after species override, uses `species.displayName` in catalog mode; BUG-7: shape symbol appended to label when `ColourBlindSettings.IsEnabled()` | `GameManager.cs`, `Week8HUDTests.cs` (new) |
+| TASK-04 | BUG-10 (prefab): `Assets/Prefabs/UI/MissText.prefab` — World Space Canvas, Animator scale-in/hold/fade-out (~1.15 s), "Meleset!" TMP_Text warm-orange; dev wire-up (`SpearHit.OnDestroy`) deferred to Week 9 | `Assets/Prefabs/UI/MissText.prefab` (new), `Assets/Prefabs/UI/MissText.anim` (new), `Assets/Prefabs/UI/MissText.controller` (new) |
+
+**Artefacts:** `TESTER_REPORT_week8.md`, `ITERATION_week8_SCOPE.md`
+
+---
+
 ## Week 6 — 2026-06-03
 
 **Branch:** `iteration/week-6`
