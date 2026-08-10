@@ -194,6 +194,11 @@ public class GoalManager : MonoBehaviour
 
     void CompleteGoal()
     {
+        // BUG-8 fix: returning players skip StartCoaching, so m_OnboardingGoals is never
+        // initialised when ForceCompleteGoal is called. Guard against the null to prevent
+        // NullReferenceException and IndexOutOfRangeException on the queue and stepList.
+        if (m_OnboardingGoals == null) return;
+
         if (m_CurrentGoal.CurrentGoal == OnboardingGoals.TapSurface)
             m_ObjectSpawner.objectSpawned -= OnObjectSpawned;
 

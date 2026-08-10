@@ -29,7 +29,18 @@ public static class DailyChallenge
 
     static string Today => DateTime.UtcNow.ToString("yyyy-MM-dd");
 
-    public static bool TryClaimDailyBonus(out int xpAwarded, out int streak)
+    /// <summary>
+    /// Claims the daily XP bonus when a new calendar day is detected.
+    /// </summary>
+    /// <param name="xpAwarded">Amount of XP granted (0 when not a new day).</param>
+    /// <param name="streak">Current consecutive-day streak after this claim.</param>
+    /// <param name="newLevel">
+    /// The player's new level when a level boundary was crossed; otherwise 0.
+    /// Callers should invoke <c>GameManager.I?.ApplyLevelReward(newLevel)</c> when
+    /// this value is greater than zero.
+    /// </param>
+    /// <returns>True if the bonus was claimed; false if already claimed today.</returns>
+    public static bool TryClaimDailyBonus(out int xpAwarded, out int streak, out int newLevel)
     {
         string lastPlayed = PlayerPrefs.GetString(LastPlayedKey, "");
         string today      = Today;
@@ -38,6 +49,7 @@ public static class DailyChallenge
         {
             xpAwarded = 0;
             streak    = PlayerPrefs.GetInt(StreakKey, 0);
+            newLevel  = 0;
             return false;
         }
 
@@ -55,7 +67,8 @@ public static class DailyChallenge
         PlayerPrefs.SetInt(StreakKey, streak);
         PlayerPrefs.Save();
 
-        ProgressionStore.AddXp(xpAwarded);
+        // BUG-1 fix: capture the return value so callers know when a level-up occurred.
+        newLevel = ProgressionStore.AddXp(xpAwarded);
         return true;
     }
 

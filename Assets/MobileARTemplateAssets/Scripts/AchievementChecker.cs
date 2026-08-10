@@ -93,11 +93,17 @@ public static class AchievementChecker
             newlyUnlocked.Add(id);
 
             // Grant XP reward if catalog is provided.
+            // BUG-2 fix: capture the AddXp return value and propagate any level-up
+            // to GameManager so rewards are applied and the level-up panel is shown.
             if (catalog != null)
             {
                 Achievement achievement = catalog.GetById(id);
                 if (achievement != null && achievement.xpReward > 0)
-                    ProgressionStore.AddXp(achievement.xpReward);
+                {
+                    int newLevel = ProgressionStore.AddXp(achievement.xpReward);
+                    if (newLevel > 0)
+                        GameManager.I?.ApplyLevelReward(newLevel);
+                }
             }
         }
 

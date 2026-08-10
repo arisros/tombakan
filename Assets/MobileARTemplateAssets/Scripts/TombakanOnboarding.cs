@@ -34,13 +34,14 @@ public class TombakanOnboarding : MonoBehaviour
             greetingPanel.SetActive(true);
         }
 
-        // Check for daily bonus — claim on every session start
-        int levelBefore = ProgressionStore.GetLevel();
-        if (DailyChallenge.TryClaimDailyBonus(out int xp, out int streak))
+        // Check for daily bonus — claim on every session start.
+        // BUG-1 fix: use the newLevel out-param from TryClaimDailyBonus (which now
+        // captures the ProgressionStore.AddXp return) to route level-up rewards.
+        if (DailyChallenge.TryClaimDailyBonus(out int xp, out int streak, out int newLevel))
         {
-            int levelAfter = ProgressionStore.GetLevel();
-            int newLevel = levelAfter > levelBefore ? levelAfter : 0;
             ShowDailyBonus(xp, streak, newLevel);
+            if (newLevel > 0)
+                GameManager.I?.ApplyLevelReward(newLevel);
         }
     }
 

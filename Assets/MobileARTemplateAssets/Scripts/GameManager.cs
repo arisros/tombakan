@@ -371,6 +371,19 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Shows the level-up panel and applies the reward configured for <paramref name="newLevel"/>
+    /// in the <see cref="levelRewardTable"/>. Called externally when a level-up occurs outside
+    /// the normal EndGame flow (daily bonus via TombakanOnboarding, achievement XP via
+    /// AchievementChecker). BUG-1 / BUG-2 fix.
+    /// </summary>
+    public void ApplyLevelReward(int newLevel)
+    {
+        if (newLevel <= 0) return;
+        ShowLevelUp(newLevel);
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(newLevel));
+    }
+
     void ApplyLevelReward(LevelReward reward)
     {
         if (reward == null) return;
@@ -482,8 +495,11 @@ public class GameManager : MonoBehaviour
         UpdateScoreUI();
 
         float delay = PacingRules.HitDelayForProgress(hitDelay, correctHitCount);
-        if (spearThrower) spearThrower.LockThrow(delay);
-        Invoke(nameof(PickNewTarget), delay + 0.8f);
+        // BUG-3 fix: lock the throw for the full duration until fish appear.
+        // Both the LockThrow unlock and the PickNewTarget invoke use delay + SpawnDelay
+        // so the player cannot fire into empty water.
+        if (spearThrower) spearThrower.LockThrow(delay + GameConstants.SpawnDelay);
+        Invoke(nameof(PickNewTarget), delay + GameConstants.SpawnDelay);
     }
 
     public static int ComboMultiplier(int streak)
