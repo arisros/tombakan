@@ -421,6 +421,15 @@ public class GameManager : MonoBehaviour
             levelUpText.text = reward.celebrationText;
     }
 
+    /// <summary>
+    /// Public overload — applies the level-up reward table entry for the given level.
+    /// Called by TombakanOnboarding when a daily-bonus XP grant triggers a level-up.
+    /// </summary>
+    public void ApplyLevelReward(int newLevel)
+    {
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(newLevel));
+    }
+
     void UpdateScoreUI()
     {
         scoreText.text = score.ToString();
@@ -446,6 +455,8 @@ public class GameManager : MonoBehaviour
         {
             targetColor = fishSpawner.CurrentTargetSpecies.baseColor;
             targetColorImage.color = targetColor;
+            if (targetColorLabel != null)
+                targetColorLabel.text = ColorHexLocalization.ToIndonesian(targetColor);
         }
 
         if (targetSpeciesLabel != null)
@@ -497,6 +508,8 @@ public class GameManager : MonoBehaviour
             }
 
             ShowHappy(earned, multiplier);
+            if (targetColorLabel != null) targetColorLabel.text = "—";
+            if (targetColorImage != null) targetColorImage.color = Color.grey;
             if (AudioManager.I != null) AudioManager.I.PlayCorrect();
             if (ScreenShake.I != null) ScreenShake.I.ShakeOnCorrect();
             HapticFeedback.PlayCorrect();
@@ -517,6 +530,7 @@ public class GameManager : MonoBehaviour
 
         float delay = PacingRules.HitDelayForProgress(hitDelay, correctHitCount);
         if (spearThrower) spearThrower.LockThrow(delay);
+        CancelInvoke(nameof(PickNewTarget));
         Invoke(nameof(PickNewTarget), delay + 0.8f);
     }
 

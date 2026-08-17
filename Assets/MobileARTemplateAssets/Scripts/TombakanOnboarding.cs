@@ -17,6 +17,9 @@ public class TombakanOnboarding : MonoBehaviour
     public GameObject dailyBonusPanel;       // shown when a daily bonus is claimed
     public TMP_Text dailyBonusText;          // e.g. "Bonus harian +100 XP! Streak 3 hari!"
 
+    [Header("Throw Hint UI (optional)")]
+    public GameObject throwHintPanel;        // shown for first-time players after greeting is dismissed
+
     [Header("Settings")]
     public bool skipOnboardingForReturning = true; // if true, veteran players skip AR steps
 
@@ -61,6 +64,9 @@ public class TombakanOnboarding : MonoBehaviour
                 : baseText;
         }
 
+        if (newLevel > 0 && GameManager.I != null)
+            GameManager.I.ApplyLevelReward(newLevel);
+
         Invoke(nameof(HideDailyBonus), 3f);
     }
 
@@ -72,7 +78,13 @@ public class TombakanOnboarding : MonoBehaviour
 
     public void DismissGreeting()
     {
-        if (greetingPanel != null) greetingPanel.SetActive(false);
-        if (goalManager  != null) goalManager.StartCoaching();
+        if (greetingPanel  != null) greetingPanel.SetActive(false);
+        if (goalManager    != null) goalManager.StartCoaching();
+        if (throwHintPanel != null) throwHintPanel.SetActive(true);
+    }
+
+    public void DismissThrowHint()
+    {
+        if (throwHintPanel != null) throwHintPanel.SetActive(false);
     }
 }

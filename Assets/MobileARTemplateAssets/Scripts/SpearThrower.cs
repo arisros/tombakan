@@ -107,6 +107,7 @@ public class SpearThrower : MonoBehaviour
     IEnumerator LockRoutine(float delay)
     {
         canThrow = false;
+        if (leash) leash.spearTip = null;
         if (spearFake) spearFake.SetActive(false);
         yield return new WaitForSeconds(delay);
         if (spearFake) spearFake.SetActive(true);

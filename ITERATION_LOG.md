@@ -1,5 +1,22 @@
 # Iteration Log
 
+## Week 7 addendum — 2026-08-17
+
+**Branch:** `iteration/week-7`
+**Tasks completed:** 3
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| T1 | P0 double-spawn fix (`CancelInvoke` before every `Invoke(PickNewTarget)`); rope tether fix (`leash.spearTip = null` first statement in `LockRoutine`); latent GoalManager NRE fix (null guard on `m_OnboardingGoals` before `.Count` access) — resolves BUG-1, BUG-4, BUG-5 | `GameManager.cs`, `SpearThrower.cs`, `GoalManager.cs` |
+| T2 | Catalog label mismatch fix (`targetColorLabel.text` re-set after species override); daily level-up reward skip fix (`ApplyLevelReward` called from `ShowDailyBonus`); stale inter-round label blanked on correct hit; throw-hint logic added to `TombakanOnboarding` (`throwHintPanel` field + `DismissThrowHint` method) — resolves BUG-2, BUG-3, UX-5, UX-1 code side | `GameManager.cs`, `TombakanOnboarding.cs` |
+| T3 | First-timer throw tutorial panel (`ThrowHintPanel`) added to scene Canvas: inactive by default, TMP_Text child reads "Sentuh tombol untuk melempar tombak", `TombakanOnboarding.throwHintPanel` wired, throw button onClick wired to `DismissThrowHint` — resolves UX-1 visual side | `Assets/Scenes/GamePlay.unity` |
+
+**Validation:** All T1/T2/T3 acceptance criteria passed re-tester check on 2026-08-17.
+
+**Tests:** `Assets/Tests/EditMode/Week7BugFixTests.cs` (5), `Assets/Tests/EditMode/Week7SceneValidationTests.cs` (7), `Assets/Tests/PlayMode/Week7PlayModeTests.cs` (8)
+
+---
+
 ## Week 7 addendum — 2026-06-15
 
 **Branch:** `iteration/week-7` (on top of 2026-06-08 Week 7 base)

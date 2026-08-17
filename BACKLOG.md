@@ -135,11 +135,24 @@
 - [x] Zen mode exit button code — `GameManager.zenEndButton` shown/hidden in `StartGame`/`EndGame` — **scene wire pending** — `GameManager.cs`
 - [x] AR water re-positioning — `PlaceWaterOnPlane._placed` flag + `BeginReposition()` + optional `repositionButton` — **scene wire pending** — `PlaceWaterOnPlane.cs`
 
+### Week 7 addendum (2026-08-17)
+- [x] BUG-1: Stacked `Invoke(PickNewTarget)` double-spawn — `CancelInvoke` before every `Invoke` in `OnFishHit` (`GameManager.cs`)
+- [x] BUG-4: SpearLeash rope tether to dying fish — `leash.spearTip = null` first statement in `LockRoutine` (`SpearThrower.cs`)
+- [x] BUG-5: `GoalManager.CompleteGoal` NRE for returning players — null guard on `m_OnboardingGoals` before `.Count` (`GoalManager.cs`)
+- [x] BUG-2: `targetColorLabel` mismatch in catalog mode — label re-set to `ToIndonesian(targetColor)` after species override (`GameManager.cs`)
+- [x] BUG-3: Daily level-up reward skip — `ApplyLevelReward(newLevel)` called from `ShowDailyBonus` (`TombakanOnboarding.cs`)
+- [x] UX-5: Stale target label during inter-round gap — blanked to "—" + grey image on correct hit (`GameManager.cs`)
+- [x] UX-1 (scene): `ThrowHintPanel` added to Canvas with TMP_Text "Sentuh tombol untuk melempar tombak"; wired to `TombakanOnboarding`; throw button onClick → `DismissThrowHint`
+
 ## Week 8 Candidates
 - [ ] Scene wiring: add "Selesai" (Zen exit) and "Ubah Posisi" (reposition water) buttons to `GamePlay.unity` in Unity Editor and assign `zenEndButton` / `repositionButton` fields
-- [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
-- [ ] `GoalManager.ForceCompleteGoal` crash risk — returning player launch could NullRef if step list uninitialised — `GoalManager.cs`, `TombakanOnboarding.cs`
-- [ ] Combo XP formula — reward sustained streaks (track hits at each tier; pass to `ProgressionRules.XpForResult()`) — design review first
-- [ ] Colour-blind target indicator shape — `targetColorImage` shows no shape symbol in CB mode when catalog is active — needs UI label addition
-- [ ] Scene wiring: `TombakanOnboarding.hintPanel` + `hintText` must be assigned in `GamePlay.unity` for throw tutorial to work at runtime
-- [ ] Achievement toast / level-up panel overlap — delay first toast to +3.5 s or add tap-to-dismiss on level-up panel — `GameManager.cs`
+- [ ] UX-2: Silent throw rejection — cooldown ring or button pulse on `SpearThrower.ThrowSpear` rejection (no `canThrow` feedback shown to player)
+- [ ] UX-3: "Pindahkan Air" re-position water button — `PlaceWaterOnPlane.EnableReposition()` method + scene button (deferred twice; bad placement forces app restart)
+- [ ] UX-4: Raw hex fallback in `Dict.cs` for custom species base colors — expand `ColorHexLocalization` map or add `FishSpecies.displayColorName` string field
+- [ ] UX-6: Water plane rotation ignored from AR pose — add `waterPlane.transform.rotation = hitPose.rotation` in `PlaceWaterOnPlane`
+- [ ] UX-7: Achievement toast can overlap active gameplay — add `StopAllCoroutines` + hide toast panel at start of `GameManager.StartGame`
+- [ ] POLISH-1: Fish boundary relative to water-plane center — pass `waterPlane.position` as explicit center to `FishSwim`
+- [ ] POLISH-3: Stacked `HideFeedback` Invoke calls on rapid hits — add `CancelInvoke(nameof(HideFeedback))` before each `Invoke`
+- [ ] POLISH-4: Haptic differentiation correct vs wrong hit — Android `AndroidJavaObject` + iOS CoreHaptics (requires device test matrix)
+- [ ] POLISH-5: Accuracy stat counts only fish-contact throws — rename label to "Ikan Kena" or track total-throw count in `SpearThrower`
+- [ ] POLISH-2: `FishShapeOverlay` absent on species model prefabs — dynamically add in `FishSpawner.SpawnFish` if missing

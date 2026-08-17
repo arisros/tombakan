@@ -194,6 +194,7 @@ public class GoalManager : MonoBehaviour
 
     void CompleteGoal()
     {
+        if (m_OnboardingGoals == null) { m_AllGoalsFinished = true; return; }
         if (m_CurrentGoal.CurrentGoal == OnboardingGoals.TapSurface)
             m_ObjectSpawner.objectSpawned -= OnObjectSpawned;
 
