@@ -1,256 +1,223 @@
-# Tester Report — Week 7
-
-## Top Issues (ranked by player impact)
-
-| Rank | Issue | File:Line | Impact |
-|------|-------|-----------|--------|
-| 1 | `DailyChallenge.TryClaimDailyBonus` still discards `ProgressionStore.AddXp` return value at line 58 — level-up from daily bonus is invisible and level rewards are never applied | `DailyChallenge.cs:58` | HIGH: player levels up before game starts, rewards silently skipped every time it happens |
-| 2 | `AchievementChecker.CheckAll` runs after `ProgressionStore.AddXp` in `EndGame` — achievement XP grant at line 100 fires `AddXp` again but the new-level return value is discarded; a fresh level-up from achievement XP is silently lost | `AchievementChecker.cs:100` | HIGH: reward cascade on achievement unlock silently levels up player with no panel, no reward |
-| 3 | `ColourBlindSettings.ShapeForColor` returns `"?"` for any colour beyond the base four (Merah/Hijau/Biru/Kuning); when `FishCatalog` assigns a `baseColor` outside those four exact hex values the shape overlay shows `"?"` with no Indonesian mapping | `ColourBlindSettings.cs:22-27` | HIGH: colour-blind players see `"?"` on every non-palette-base fish when catalog is active |
-| 4 | `GoalManager.ForceCompleteGoal` calls `CompleteGoal()` which immediately dereferences `m_StepList[m_CurrentGoalIndex]`; if `TombakanOnboarding.Start` calls this before `GoalManager.StartCoaching()` initialises the queue and step list, index is 0, the queue is empty, and the `else` branch sets `m_AllGoalsFinished = true` and returns before `m_StepList[m_CurrentGoalIndex - 1].stepObject.SetActive(false)` — skipping over an uninitialised step at index -1 is one off-by-one away from a crash | `GoalManager.cs:196-213`, `TombakanOnboarding.cs:30` | MED-HIGH: returning player launch could produce a NullReferenceException or silently skip onboarding dismissal leaving old step panels on screen |
-| 5 | Achievement toast sequencing overlaps with level-up panel: `ShowAchievementsSequenced` starts at +1.2 s (`GameManager.cs:354`), level-up panel shows at +0.8 s (`GameManager.cs:344-348`); the first toast fires 0.4 s after the level-up panel opens while it is still being read | `GameManager.cs:344,354` | MED: level-up panel and achievement toast compete for attention; achievement text may obscure or clash with level-up text |
-| 6 | `SpearThrower.LockThrow` calls `StopAllCoroutines()` which stops both `LockRoutine` and `CooldownRoutine`; if a spear is in-flight when a new fish round begins, `CooldownRoutine` is cancelled — `canThrow` stays `false` and `spearFake.SetActive(true)` is never called, permanently locking the throw button | `SpearThrower.cs:100-101` | MED: player throws, hits fish, new round starts mid-flight; throw button becomes visually present (spearFake visible from `LockRoutine`) but `canThrow` is `false` — silent lock |
-| 7 | `SpearThrower.LockRoutine` and `CooldownRoutine` both call `spearFake.SetActive(true)` on completion; if `LockThrow` is called before `CooldownRoutine` finishes, `spearFake` re-appears before the cooldown is over, giving a visual hint that the player can throw before they actually can | `SpearThrower.cs:94,110` | LOW-MED: misleading visual feedback every time `LockThrow` is called during a cooldown window |
-| 8 | No throw-mechanic tutorial for first-time players — persists from Week 6 UX-1 | `TombakanOnboarding.cs` | LOW-MED: first-time player learns throw mechanic through trial and error only |
+# Tombakan — Tester Report Week 7
+**Date:** 2026-09-07  
+**Tester:** Claude Sonnet 4.6 (automated static analysis + session simulation)  
+**Scope:** BACKLOG.md, GameManager.cs, FishSwim.cs, FishSpawner.cs, SpearThrower.cs, PlaceWaterOnPlane.cs, FishHitBox.cs, Dict.cs, DailyChallenge.cs, TombakanOnboarding.cs, PacingRules.cs, TimeBonus.cs, SpearHit.cs  
 
 ---
 
-## Session Simulations
+## Session Profiles Simulated
 
-### Session 1 — First-time Player (no AR experience)
-
-**Profile:** Fresh install, `ScoreStore.GetBest() == 0`, `ProgressionStore.GetTotalXp() == 0`.
-
-**Flow:**
-1. App launches. `GameManager.Start()` → `AudioManager.I.PlayMainBGM()`. `ProgressionHUD` shows `Lv 1`, XP bar empty.
-2. `TombakanOnboarding.Start()` — `isReturningPlayer = false` — shows `greetingPanel` if wired. Calls `DailyChallenge.TryClaimDailyBonus` — first day, no prior `LastPlayedKey` → returns `true`, awards 100 XP (`streak = 1`). `ShowDailyBonus(100, 1, newLevel: 0)` — shows `dailyBonusPanel` for 3 s. Panel hides via `HideDailyBonus`.
-3. Player dismisses greeting → `DismissGreeting()` → `goalManager.StartCoaching()`. Coaching begins with `FindSurfaces`.
-4. Player scans floor (real device). `PlaceWaterOnPlane.Update()` detects touch on AR plane → positions water, calls `DisableARPlanes()`, sets `enabled = false`.
-5. Player presses Start. `GameManager.StartGame()` → `gameRunning = true`, timer at 60 s, fish spawn.
-6. Player sees target colour swatch + Indonesian label (e.g. "Merah"). No hint exists for how to throw.
-7. Player taps background — `PlaceWaterOnPlane` is already disabled, no response. Taps fish directly — `SpearHit` is on the spear, not on a tap target. No throw occurs.
-
-**Friction — UX-1 (known, still present):** No throw tutorial. Silent failure on random taps. First-timer has no clear affordance for the throw button. `TombakanOnboarding` has no game-mechanic step beyond AR coaching.
-
-**New observation:** The `greetingPanel` has a `DismissGreeting` button wired to call `goalManager.StartCoaching()`. However `TombakanOnboarding.Start()` checks the daily bonus before the player has a chance to dismiss the greeting — so the daily-bonus panel and the greeting panel could both be active simultaneously. There is no ordering or mutual exclusion between them. On a small phone screen both panels may overlap.
+| # | Persona | Device | Session goal |
+|---|---------|--------|-------------|
+| 1 | First-timer Keanu (18, casual gamer) | Android mid-range | Complete first game |
+| 2 | First-timer Rina (14, Indonesian student, colour-blind off) | iOS | Learn colour names |
+| 3 | Returning casual Dewi (24) | Android | Daily bonus + shop browse |
+| 4 | Returning casual Budi (30) | iOS, placed water badly | Reposition and play |
+| 5 | Speed-runner Andi (22, competitive) | Android | Stack combo, replay fast |
+| 6 | Frustrated Siti (35, motion-sensitive) | Android | Quit mid-game |
+| 7 | Zen-mode explorer | Android | Open-ended play |
+| 8 | Low-light indoor player | Android | AR plane detection struggle |
+| 9 | Power user with combo spamming | Android | Throw before fish respawn |
+| 10 | Returning player claiming daily level-up reward | Android | Verify reward applied |
 
 ---
 
-### Session 2 — Casual Player (3rd session, daily login)
+## Findings
 
-**Profile:** `ScoreStore.GetBest() = 400`, `ProgressionStore.GetTotalXp() = 85` (Level 1, 15 XP from Level 2 threshold at 100 XP).
+### BUG-1 (CRITICAL) — No throw-mechanic tutorial for first-time players
 
-**Flow:**
-1. `TombakanOnboarding.Start()` — `isReturningPlayer = true` → `goalManager.ForceCompleteGoal()` called.
-2. **BUG-4 trace (GoalManager state):** `ForceCompleteGoal()` calls `CompleteGoal()`. If `GoalManager.StartCoaching()` was never called this session (it runs on `DismissGreeting` for new players, not for returning players), `m_OnboardingGoals` may be null or empty. Inside `CompleteGoal()`:
-   - `m_CurrentGoal.Completed = true`
-   - `m_CurrentGoalIndex++` → now 1
-   - `m_OnboardingGoals.Count` could be 0 (or null-exception if queue never initialised) → falls into `else`: sets `m_AllGoalsFinished = true`, returns.
-   - But **before** that, line 204: `m_StepList[m_CurrentGoalIndex - 1].stepObject.SetActive(false)` — this accesses `m_StepList[0]`. If `m_StepList` is empty or not wired in the scene, this throws `IndexOutOfRangeException` or `NullReferenceException`. The scene dependency is untested.
-3. Daily bonus: `levelBefore = ProgressionStore.GetLevel() = 1`. `DailyChallenge.TryClaimDailyBonus(out xp, out streak)` → XP = 100, streak = 3. `ProgressionStore.AddXp(100)` inside `TryClaimDailyBonus` — total XP goes from 85 to 185 → crosses Level 2 threshold (100 XP needed). **Level-up occurs inside `DailyChallenge.cs:58`** but the return value is discarded. `levelAfter = ProgressionStore.GetLevel() = 2`. `newLevel = 2 > 1` → `ShowDailyBonus(100, 3, 2)`. Daily bonus panel shows `"Bonus harian +100 XP!\nStreak 3 hari berturut-turut!\nLevel 2! Selamat!"`.
-4. **Week 6 BUG-2 status (PARTIAL FIX — CONFIRMED):** The `TombakanOnboarding.cs:38-44` fix correctly detects the level-up and surfaces it in the daily panel. However, `LevelRewardTable.GetRewardForLevel(2)` is **never called** in this code path. Any reward configured for Level 2 (soft currency bonus, species unlock, spear skin unlock) is silently skipped. The reward is only applied via `GameManager.EndGame` → `StaggerResultCelebrations` → `ApplyLevelReward`. Level-up from daily bonus has no path to reward application.
+**File:** `TombakanOnboarding.cs` (all), `GameManager.cs` line 247  
+**Sessions affected:** 1, 2
 
----
+`TombakanOnboarding` coaching covers only AR plane placement (via `goalManager.ForceCompleteGoal()` / `StartCoaching()`). Once the water surface is placed, no hint, label, or overlay explains that the player must tap the on-screen button to throw the spear. `SpearThrower.ThrowSpear()` is wired to a UI button, but that button has no instructional label or callout in the onboarding flow. First-timers stare at a fish-filled pool and repeatedly tap the water surface (where the AR plane was), triggering nothing, until they accidentally find the throw button or give up.
 
-### Session 3 — Speed Runner (maximising score)
+**Reproduction:** Launch with fresh PlayerPrefs. Complete AR placement. Do not interact with throw button. Observe: fish swim indefinitely with no prompt.
 
-**Profile:** Level 6, XP = 820, streak 3. Aims for 15+ correct hits in 60 s.
-
-**Flow:**
-1. `StartGame()` — all counters reset.
-2. Round 1: hits correct fish at t=3 s. `OnFishHit(Color.green, "koi")` — `gameRunning = true` guard passes. `comboStreak = 1`, `score = 100`, `timeLeft += 0.5 s` (TimeBonus). `LockThrow(delay)` called, `PickNewTarget` invoked after delay.
-3. At correct = 5: `FishPalette.CountForProgress(5)` → `3 + 5/5 = 4` — fourth colour (Kuning) joins the active set. Difficulty ramp confirmed working.
-4. At correct = 10: `fishSpawner.fishCount = FishCountForDifficulty(10) = 6`.
-5. At correct = 15: `fishSpawner.fishCount = 7`.
-
-**Race condition trace — SpearThrower.LockThrow:**
-At t=12s, player throws (spear flying). Fish hit at t=12.4s. `OnFishHit` fires → `LockThrow(delay)` called at `GameManager.cs:485`. `SpearThrower.LockThrow` → `StopAllCoroutines()`. This stops any running `CooldownRoutine`. `LockRoutine` starts with `canThrow = false`, `spearFake.SetActive(false)`. After `delay` seconds, `spearFake.SetActive(true)`, `canThrow = true`. Visually correct.
-
-But now consider: player throws again at t=15s, hits at t=15.3s (0.3 s into the throw). `CooldownRoutine` is running (cooldown = 1.2 s, only 0.3 s elapsed). `LockThrow(delay)` calls `StopAllCoroutines()` — kills `CooldownRoutine`. `LockRoutine` starts. At end of lock, `spearFake.SetActive(true)`, `canThrow = true`. **Correct behaviour in happy path.**
-
-However the problem is asymmetric: if `LockRoutine` is already running when a second `LockThrow` is called, the new `StopAllCoroutines` stops the old `LockRoutine` mid-flight leaving `canThrow = false` and `spearFake` potentially invisible. The new `LockRoutine` then starts fresh and resolves correctly. In practice this path only triggers if two fish hits occur faster than `hitDelay` (which pacing rules prevent with the `LockThrow` call). **Low probability but latent.**
-
-**EndGame:**
-- `xpEarned = ProgressionRules.XpForResult(16, 100, 2, 5)` = 160 + 2 + 100 + 100 = 362 XP.
-- `newLevel = ProgressionStore.AddXp(362)` — returns new level if crossed.
-- `StaggerResultCelebrations(isRecord, newLevel)` — badge at +0.4 s, level-up panel at +0.8 s. **Week 6 POLISH-1 fix confirmed working.**
-- `ShowAchievementsSequenced(newlyUnlocked, catalog)` — starts at +1.2 s after `EndGame`.
-- **Overlap issue:** `levelUpPanel` activates at +0.8 s. First achievement toast fires at +1.2 s. If achievement toast panel overlaps levelUpPanel in the scene layout, both are visible from +1.2 s to +2.8 s (toast shows for 2 s). Player reading level-up text at +0.8 s is interrupted by toast at +1.2 s. Gap is only 0.4 s — not enough for the level-up message to register.
+**Proposed fix:** Implement the open Week 7 candidate (UX-1 in BACKLOG): add a `TombakanOnboarding` coaching step that shows a hint panel ("Sentuh tombol untuk melempar tombak") with a finger-gesture overlay pointing at the throw button. Auto-dismiss after first successful throw. This is already tracked in BACKLOG — move it to the current sprint.
 
 ---
 
-### Session 4 — Achievement Hunter (chasing first milestone)
+### BUG-2 (HIGH) — AR water placement permanent; no repositioning path
 
-**Profile:** Level 3, 12 games played, combo streaks of 4 previously. This game: combo of 5 achieved.
+**File:** `PlaceWaterOnPlane.cs` line 37  
+**Sessions affected:** 4, 6
 
-**Flow:**
-1. Player builds 5 consecutive correct hits. `comboStreak = 5`, `maxComboStreak = 5`.
-2. `EndGame()` fires.
-3. `AchievementChecker.CheckAll(this, achievementCatalog)` → evaluates `Combo5: maxComboStreak >= 5` → true. `AchievementStore.IsUnlocked("combo_5")` → false (first time). `AchievementStore.Unlock("combo_5")` persists. `ProgressionStore.AddXp(achievement.xpReward)` — **BUG-5:** return value discarded (line 100). If this XP crosses a level boundary, the level-up is silent and `ApplyLevelReward` is never called.
-4. `newlyUnlocked = ["combo_5"]`.
-5. `StartCoroutine(ShowAchievementsSequenced(["combo_5"], catalog))` — waits 1.2 s, then shows `achievementToastPanel` with `achievement.titleIndonesian` for 2 s. **Week 6 UX-2 fix confirmed working — toast is now shown.**
-6. Toast closes at +3.2 s after EndGame.
+`PlaceWaterOnPlane.Update()` sets `enabled = false` after the first successful raycast hit. This one-shot guard (Week 5 fix for mid-game re-placement) permanently locks the water surface position for the entire app session. If the player taps a table-edge, a chair, or a sloped surface on first attempt, the water prefab spawns at that bad position with no recovery path. Restarting the app is the only fix.
 
-**New issue confirmed (BUG-NEW-1):** `AchievementChecker.cs:100` — `ProgressionStore.AddXp` return value discarded. The level-up from achievement XP reward goes unacknowledged. The `levelUpPanel` will not appear for this level-up path.
+**No re-position button exists in the scene** — the BACKLOG Week 7 candidate ("Re-position water button") is listed as open and unimplemented.
 
----
+**Reproduction:** Launch on device. Tap a non-flat or off-centre surface on first touch. Observe: `PlaceWaterOnPlane` is disabled; subsequent taps on the floor do nothing; fish spawn at the wrong world position.
 
-### Session 5 — Frustrated Player (3 misses in a row)
-
-**Profile:** Level 2, first session of the day. Player hits wrong fish 3 times consecutively.
-
-**Flow:**
-1. Wrong hit 1: `OnFishHit(blue_fish, "salmon")` where `targetColor = Color.red`. `correct = false`. `comboStreak = 0`, `wrongHitCount = 1`. `score = ClampScore(0 - 25) = 0` (clamped at 0 — week 1 fix). `ShowSad()` → sadFeedback shows `"-25!"`.
-2. Wrong hit 2: same. `wrongHitCount = 2`. Score stays 0 (clamped). `ShowSad()` again.
-3. Wrong hit 3: `wrongHitCount = 3`. Score 0.
-
-**Observed pattern:** Feedback text always shows `"-25!"` even when the deduction was absorbed by the clamp and the displayed score did not change. Player sees `"-25!"` feedback but score stays at 0, creating confusion. The sadFeedback text uses `penaltyPerWrongHit` (25) but the actual deduction was 0 after clamping.
-
-**UX Gap (UX-NEW-1):** `GameManager.cs:473-477` — `ShowSad()` always shows `"-{penaltyPerWrongHit}!"` (line 507) regardless of whether the clamp absorbed the penalty. When score is already 0, the player sees a penalty notification for a penalty that did not apply to the displayed score.
-
-**Continuation:**
-4. Timer runs out. `EndGame()`. `resultAccuracyText.text = Accuracy.Format(0, 3) = "0/3 (0%)"`. Tier = TierEmpty (correct = 0). XP = 0. `resultXpText.text = ""` (suppressed — week 5 fix confirmed).
+**Proposed fix:** Add a "Posisi ulang" (Reposition) button to the main screen or a pause panel. Tapping it re-enables `PlaceWaterOnPlane`, hides the waterPlane, calls `fishSpawner.ClearAll()`, and re-enables ARPlaneManager scanning. Guard the button so it only appears before `StartGame()` is called (to preserve the mid-game guard).
 
 ---
 
-### Session 6 — Veteran Player (10+ games, high XP, Level 8)
+### BUG-3 (HIGH) — Daily-bonus level-up reward silently discarded
 
-**Profile:** Level 8, XP = 2400, best score = 3600.
+**File:** `DailyChallenge.cs` line 58, `TombakanOnboarding.cs` lines 38–44  
+**Sessions affected:** 3, 10  
+**BACKLOG reference:** Week 7 "BUG-2 partial — DailyChallenge.cs:58 reward grant still skipped"
 
-**Flow:** Full 60 s game. Hits 18 fish correct, 1 wrong. `maxComboStreak = 10`. `score = 18 × 100 + various combo bonuses`. `xpEarned = ProgressionRules.XpForResult(18, 94, 0, 10)` = 180 + 2 (combo bonus: multiplier 3, (3-1)×5=10 XP... wait — `XpForResult` uses `Mathf.Max(0, multiplier - 1) * XpPerComboBonus`: `(3-1) * 5 = 10`) + 94 (accuracy %) + 0 (no new species) = 284 XP.
+`DailyChallenge.TryClaimDailyBonus()` calls `ProgressionStore.AddXp(xpAwarded)` at line 58 but **discards the return value** (which is the new level number when a level-up occurs). `TombakanOnboarding.Start()` correctly compares `levelBefore`/`levelAfter` to detect the level-up and surfaces the celebration text — but it calls only `ShowDailyBonus()`, which sets text and auto-hides the panel. **`GameManager.ApplyLevelReward()` is never called from `TombakanOnboarding`**, so any reward configured in `LevelRewardTable` for that level (coins, species unlock, spear skin) is permanently skipped.
 
-**Achievement check:** `AchievementChecker.CheckAll` — `Level10: playerLevel >= 10 → false`. `PerfectRound: wrongHitCount == 0 → false (1 wrong)`. `Combo5: maxComboStreak >= 5 → true`. If already unlocked, no action. `SpeciesCollector5: FishdexStore.UnlockedCount() >= 5` — if catalog assigned and player has caught 5+ species, unlocks and grants XP. Return value still discarded.
+**Reproduction:** Set PlayerPrefs such that the next `AddXp` call would cross a level threshold. Restart app on a new calendar day. Observe level-up panel text appears, but inspecting `CurrencyStore` / `SpearStore` / `FishdexStore` shows no reward was applied.
 
-**Result screen:** Badge +0.4 s, level-up panel +0.8 s (if level-up occurred), achievement toast +1.2 s. All three stagger correctly. Veteran player can read each in sequence. **Week 6 POLISH-1 fix working correctly for this session.**
-
-**XP bar after game:** `RefreshProgressionHUD()` called in `EndGame` at line 282 — updates `levelBadgeText` and `xpBarFill` correctly before any coroutine fires. **No bug here.**
-
----
-
-### Session 7 — Colour-blind Player
-
-**Profile:** `ColourBlindSettings.IsEnabled() = true`, FishCatalog assigned in scene.
-
-**Flow:**
-1. `FishSpawner.SpawnFish` — `targetSpecies = catalog.PickRandom()`. `resolvedTargetColor = targetSpecies.baseColor`. Fish spawned with `fishColor = targetSpecies.baseColor`.
-2. `FishShapeOverlay.Start()` — `ColourBlindSettings.IsEnabled() = true` → `label.enabled = true`. `label.text = ColourBlindSettings.ShapeForColor(fishTarget.fishColor)`.
-3. **BUG-3 trace:** `ShapeForColor` at `ColourBlindSettings.cs:18-29` maps only four exact hex values: `FF0000`, `00FF00`, `0000FF`, `FFFF00`. `FishSpecies.baseColor` is a free-form `Color` field. If a species has `baseColor = new Color(0.9f, 0.6f, 0.2f)` (an orange fish), `ColorUtility.ToHtmlStringRGB` produces `E6993F`. No match in the switch → returns `"?"`. The overlay shows `"?"` to the player. With 8 defined species in the starter catalog (BACKLOG), the majority of species likely have colours outside the four-colour palette, making this bug affect most catalog play.
-4. The `targetColorLabel` also shows `ColorHexLocalization.ToIndonesian(targetColor)` — if the species `baseColor` is not in `Dict.cs`'s 20-entry map, the hex string itself is shown instead of an Indonesian name (fallback at `Dict.cs:35`). Both the label and the shape overlay degrade for out-of-palette species colours.
-
-**Confirmed bug — colour-blind mode + FishCatalog = broken experience.**
+**Proposed fix:** In `TombakanOnboarding.Start()`, after confirming `newLevel > 0`, invoke reward application. Either pass `GameManager.I` a method or extract `ApplyLevelReward` to a static helper (e.g., in `ProgressionStore` or a new `RewardDispatcher`) that `TombakanOnboarding` can call without a `GameManager` reference.
 
 ---
 
-### Session 8 — Player Who Mutes Audio Mid-Game
+### BUG-4 (HIGH) — `targetColor` float-precision mismatch when species catalog is active
 
-**Profile:** Mutes audio at t=30s during gameplay.
+**File:** `GameManager.cs` lines 396–421, `OnFishHit` line 441  
+**Sessions affected:** 5, 9
 
-**Flow:**
-1. `MuteButtonUI.OnClick()` → `AudioManager.I.ToggleMute()` → `SetMuted(true)` → `ApplyMute()` mutes both `bgmSource` and `sfxSource`. BGM fades instantly (`.mute = true`). `AudioPrefs.SetMuted(true)` persists.
-2. At t=35s, player hits correct fish. `OnFishHit` → `AudioManager.I.PlayCorrect()` → `sfxSource.PlayOneShot(sfxCorrect)` — audio source is muted, SFX is silent. Expected.
-3. `HapticFeedback.PlayCorrect()` — **Week 6 fix confirmed:** no longer checks `AudioPrefs.IsMuted()`. `HapticFeedback.cs:12-17` shows just `#if UNITY_ANDROID || UNITY_IOS Handheld.Vibrate() #endif`. Vibration fires regardless of mute state. **BUG-3 from Week 6 is fixed.**
-4. `ScreenShake.I.ShakeOnCorrect()` — runs independently of mute. Camera shakes. Good.
+In `PickNewTarget()`:
+1. `targetColor` is assigned from `FishPalette.ActiveOptions()` (a preset Color).
+2. `fishSpawner.SpawnFish(targetColor, ...)` is called; internally it resolves `resolvedTargetColor = targetSpecies.baseColor` (from a ScriptableObject).
+3. After spawning, `GameManager.targetColor` is **overwritten** with `fishSpawner.CurrentTargetSpecies.baseColor`.
 
-**Week 6 fix verification — HapticFeedback decoupled from audio mute: CONFIRMED FIXED.** `HapticFeedback.cs` has no reference to `AudioPrefs` or `AudioManager`.
+In `OnFishHit()`, correctness is tested as `fishColor == targetColor`. `fishColor` originates from `FishTarget.fishColor` = `resolvedTargetColor` = `targetSpecies.baseColor`. The overwritten `targetColor` is also `targetSpecies.baseColor` — both come from the same ScriptableObject field, so in practice they are the same object reference copied by value.
 
-**Remaining polish (POLISH-2, still open):** Both `PlayCorrect` and `PlayWrong` call `Handheld.Vibrate()` identically — no duration or pattern difference. Correct and wrong hits feel identical on device.
+However, if `FishSpecies.baseColor` was authored in the Inspector with any rounding (e.g., an artist typed `(0.0, 0.5, 1.0, 1.0)` which Unity stores as a float), and any code path normalises or re-encodes that value (e.g., via `ColorUtility.ToHtmlStringRGB` round-trip in the color name lookup), **the exact float values can diverge**. Unity's `Color.==` uses an epsilon of `1/255 ≈ 0.004`; most differences won't matter, but a species with baseColor authoring inconsistencies will cause all hits to register as wrong — breaking scoring silently without any logged error.
 
----
-
-### Session 9 — Edge Case: Timer Expires While Spear Is Mid-Flight (BUG-1 Fix Verification)
-
-**Profile:** Player throws at t=59.5 s. Timer reaches 0 at t=60.0 s.
-
-**Code trace:**
-1. t=60.0s: `GameManager.Update()` → `timeLeft <= 0f` → `gameRunning = false` → `EndGame()` called. Result screen shows score = 1000. `fishSpawner.ClearAll()` destroys all fish.
-2. t=60.4s: In-flight spear reaches where fish was — but fish is already destroyed. `SpearHit.CheckFishHit()` finds no colliders. No hit registered. Spear destroyed at t=62.0s (spearLifeTime = 2.5s from throw at t=59.5s).
-3. Alternate: fish not yet cleared when spear lands (timing depends on frame). If spear hits before `ClearAll`:
-   - `FishHitBox.OnHit(fishColor, speciesId, spear)` → `GameManager.I.OnFishHit(...)`.
-   - **`GameManager.cs:440`: `if (!gameRunning) return;`** — `gameRunning` is already `false`. Returns immediately. Score not modified. Result screen unchanged.
-
-**Week 6 BUG-1 fix: CONFIRMED FIXED.** The guard at `GameManager.cs:440` prevents any post-EndGame score mutation. The result screen score is correct regardless of in-flight spear timing.
+**Proposed fix:** Replace `fishColor == targetColor` with a species-ID comparison when catalog is active: `bool correct = (!string.IsNullOrEmpty(speciesId) && speciesId == fishSpawner.CurrentTargetSpecies?.id) || fishColor == targetColor`. This eliminates float dependency when species IDs are available.
 
 ---
 
-### Session 10 — Daily Bonus XP Triggers Level-Up (BUG-2 Partial Fix Verification)
+### BUG-5 (MEDIUM) — Two simultaneous spears can double-hit in the same round
 
-**Profile:** Player has 95 XP (5 XP from Level 2 threshold at 100). Streak = 1 (first daily bonus).
+**File:** `SpearThrower.cs` lines 68–69, `SpearHit.cs`, `FishHitBox.cs`  
+**Sessions affected:** 9
 
-**Code trace:**
-1. `TombakanOnboarding.Start()` at line 38: `levelBefore = ProgressionStore.GetLevel()` = 1.
-2. `DailyChallenge.TryClaimDailyBonus(out xp, out streak)` called. Inside `DailyChallenge.cs:51`: `xpAwarded = TotalBonusXp(1) = 100 + 1 × 25 = 125`. Line 58: `ProgressionStore.AddXp(125)` — total XP = 220, Level 2 threshold = 100, Level 3 threshold = 283. New level = 2. **Return value discarded.**
-3. Back in `TombakanOnboarding.cs:40`: `levelAfter = ProgressionStore.GetLevel()` = 2. `newLevel = 2`. `ShowDailyBonus(125, 1, 2)` — panel text = `"Bonus harian +125 XP!\nSelamat datang kembali!\nLevel 2! Selamat!"`. Panel shown for 3 s.
+`SpearThrower` enforces a **1.2 s cooldown** before the player can throw again. The projectile's lifetime is **2.5 s**. A spear that misses all fish remains physically active in the scene for 2.5 s with its `SpearHit.hasHit = false`. After the 1.2 s cooldown the player can throw a second spear. For 1.3 s both projectiles coexist. Each carries an independent `SpearHit` component running `Physics.OverlapSphere` every frame.
 
-**Week 6 partial fix verified:** Level-up IS surfaced in the daily bonus text — `TombakanOnboarding.cs:57-59` appends the level-up line. **The UI acknowledgement is now present.**
+If both spears reach different fish simultaneously, **both `FishHitBox.OnHit` calls succeed** (each fish has its own `isHit` guard). `GameManager.OnFishHit` is called twice in the same round:
+- `correctHitCount` increments twice.
+- `Invoke(nameof(PickNewTarget), delay + 0.8f)` is queued **twice**.
+- `PickNewTarget` fires twice in rapid succession: the first batch of new fish is immediately cleared by the second `ClearFish()` call, effectively skipping one full round.
+- Score and combo may be double-counted.
 
-**Remaining gap — Level rewards not applied (BACKLOG Week 7 candidate):** `LevelRewardTable.GetRewardForLevel(2)` is never called in `TombakanOnboarding`. If Level 2 grants a coin bonus or species unlock, it is silently skipped. The only path that calls `ApplyLevelReward` is `GameManager.StaggerResultCelebrations` — which runs only during `EndGame`, not during onboarding. The reward gap is confirmed at `DailyChallenge.cs:58` (AddXp without capturing return for rewards) and also at the `TombakanOnboarding.cs:39-44` path (no call to `ApplyLevelReward`).
+**Reproduction:** Throw and deliberately miss. Wait for cooldown (1.2 s). Throw again quickly. If first spear intersects a fish during the second throw's early frames, observe double-score feedback and fish-flash.
 
----
-
-### Session 11 — Edge Case: Achievement XP Causes Silent Level-Up
-
-**Profile:** Level 4, XP = 395. Level 5 threshold = `round(100 × 4^1.5) = round(100 × 8) = 800`. Remaining to Level 5 = 405 XP. Player earns `first_catch` achievement (xpReward = 50 XP, hypothetical catalog value).
-
-**Code trace:**
-1. `EndGame()` at line 274: `xpEarned = ProgressionRules.XpForResult(...)`, say 200 XP. `ProgressionStore.AddXp(200)` → XP = 595. Level still 4. `newLevel = 0`.
-2. Line 290: `AchievementChecker.CheckAll(this, catalog)` — `first_catch` condition met (if not previously unlocked). `AchievementStore.Unlock("first_catch")`. `ProgressionStore.AddXp(50)` at `AchievementChecker.cs:100` — XP = 645. Still Level 4. No level-up.
-3. Same scenario but xpEarned = 380 XP: after EndGame XP = 775, `newLevel = 0`. Achievement XP adds 50 → XP = 825 → crosses Level 5 threshold. `AddXp(50)` returns 5 (new level) but return is discarded at line 100. No `levelUpPanel`, no reward from `LevelRewardTable.GetRewardForLevel(5)`.
-
-**This is a real failure path with tangible reward loss** — confirmed as BUG-NEW-1.
+**Proposed fix:** Track the active spear in `SpearThrower` and cancel (destroy) any surviving previous spear before instantiating a new one in `ThrowSpear()`. Alternatively, check `gameRunning` and a "roundId" counter in `OnFishHit` to discard stale hits.
 
 ---
 
-### Session 12 — Zen Mode Player
+### BUG-6 (MEDIUM) — `greetingPanel` has no auto-dismiss timeout
 
-**Profile:** Player switches to Zen mode (`currentMode = GameMode.Zen`).
+**File:** `TombakanOnboarding.cs` lines 33–35, 71–74  
+**Sessions affected:** 1
 
-**Flow:**
-1. `StartGame()` — `timeLeft = float.MaxValue` (line 223). `timerCountdownText.text = "--"`. `timerBarFill.fillAmount = 1f`.
-2. `Update()` — `currentMode == GameMode.Zen` → `timerBarFill.fillAmount = 1f; return`. Timer never decrements.
-3. `EndGameManual()` — the only way to end. Sets `gameRunning = false`, calls `EndGame()`.
-4. `EndGame()` — `resultAccuracyText`, XP, coins, achievements all fire as normal.
+For players with `score == 0 && totalXp == 0`, `greetingPanel.SetActive(true)` is called. The panel is only hidden by `DismissGreeting()`, which requires a scene-wired button to call it. The BACKLOG lists "Wire TombakanOnboarding to scene; wire GoalManager reference" as **blocked on Unity Editor access** — meaning the dismiss button may not be wired in the current build.
 
-**Issue found — Zen mode + `LockThrow`:** `GameManager.OnFishHit` line 484: `float delay = PacingRules.HitDelayForProgress(hitDelay, correctHitCount)`. With `correctHitCount = 12`, delay = `2.2 - 0.1×12 = 1.0` (floored at `MinHitDelay = 1.0`). `spearThrower.LockThrow(1.0)`. `Invoke(nameof(PickNewTarget), 1.0 + 0.8 = 1.8)`.
+If the button is absent or not wired, the greeting panel remains on screen permanently, obscuring the main menu and blocking `StartGame()`. First-time players are stuck at the greeting screen.
 
-In Zen mode there is no auto-end, but the Invoke for `PickNewTarget` still checks `!gameRunning` guard. If player triggers `EndGameManual()` during the 1.8 s delay, the Invoke fires after EndGame but hits the guard. **No bug — guard prevents it.**
-
-**Observation:** `timerWarningActive` check in `Update()` returns early before it can ever be set in Zen mode, so the warning state is never cleaned up if the player starts a non-Zen game after Zen. However `StartGame()` at line 228-230 explicitly stops and clears `timerPulseRoutine` and resets `timerWarningActive = false`. **No bug** — state is reset on start.
+**Proposed fix:** Add a fallback `Invoke(nameof(DismissGreeting), 5f)` at the end of the `greetingPanel` activation block, so the panel auto-closes after 5 seconds even without a wired button. The button (when wired) will still allow early dismissal.
 
 ---
 
-## Bugs Found
+### BUG-7 (MEDIUM) — No in-game pause or quit path
 
-- [ ] **BUG-NEW-1** — `AchievementChecker.CheckAll` discards the return value of `ProgressionStore.AddXp(achievement.xpReward)` at line 100; any level-up triggered by achievement XP is silent and `LevelRewardTable` rewards are not applied — `AchievementChecker.cs:100` — reproduction: be near a level boundary, trigger a first-time achievement with a non-zero `xpReward`; confirm level increments in HUD with no panel and no reward applied
-- [ ] **BUG-NEW-2** — `TombakanOnboarding.cs` level-up path (`levelAfter > levelBefore`) never calls `ApplyLevelReward`; level rewards (coins, species unlock, spear skin) are skipped on daily-bonus level-ups — `TombakanOnboarding.cs:39-44`, `DailyChallenge.cs:58` — reproduction: have XP near a level threshold; login on a new day; level increments and shows in the daily panel but reward is never granted (check `CurrencyStore.GetCoins()` before and after — should increase if Level N has a coin reward)
-- [ ] **BUG-NEW-3** — `ColourBlindSettings.ShapeForColor` only handles four exact hex values (`FF0000`, `00FF00`, `0000FF`, `FFFF00`); any `FishSpecies.baseColor` outside this set returns `"?"` on shape overlays — `ColourBlindSettings.cs:22-27` — reproduction: enable colour-blind mode with a `FishCatalog` that has a species with a non-palette colour; observe `"?"` on fish shapes
-- [ ] **BUG-NEW-4** — `ShowSad()` always displays `"-25!"` even when `ClampScore` absorbs the full penalty and the visible score does not change; player sees a penalty notification for a penalty that had no effect — `GameManager.cs:473-477,507` — reproduction: let score reach 0, then hit a wrong fish; `"-25!"` appears but score stays 0
-- [ ] **BUG-NEW-5** — `GoalManager.ForceCompleteGoal` is called from `TombakanOnboarding.Start()` before `StartCoaching()` initialises the goal queue; `CompleteGoal()` can access `m_StepList` at an uninitialised or out-of-range index for returning players — `GoalManager.cs:196-213`, `TombakanOnboarding.cs:30` — reproduction: returning player (non-zero score/XP) launches app; `ForceCompleteGoal()` fires immediately in `Start()`; if `m_StepList` is populated in the Inspector the step at index 0 is forcibly hidden; if the list is unpopulated, `NullReferenceException` or `IndexOutOfRangeException` may crash the scene
+**File:** `GameManager.cs` (no pause/quit method exists)  
+**Sessions affected:** 6
 
----
+Once `StartGame()` hides `mainScreenUI` and begins the 60 s countdown, there is **no pause function and no return-to-menu function** in `GameManager`. Players who need to stop mid-game (phone call, motion sickness, battery warning) must either wait 60 s for `EndGame()` to fire or force-quit the OS process. Forced quit discards any XP/coins earned mid-session.
 
-## Known Items Confirmed Fixed (Week 6)
-
-- **BUG-1 FIXED** — `OnFishHit` now has `if (!gameRunning) return;` guard at `GameManager.cs:440`; mid-flight spear no longer mutates score or stats after EndGame.
-- **HapticFeedback decoupled FIXED** — `HapticFeedback.cs` contains no reference to `AudioPrefs` or `AudioManager`; vibration fires independently of mute state.
-- **Achievement toast FIXED** — `ShowAchievementsSequenced` coroutine in `GameManager.cs:352-371` correctly sequences toast display; null-safe guard at line 358 (`yield break` if panel is null).
-- **Result celebrations staggered FIXED** — `StaggerResultCelebrations` coroutine: badge at +0.4 s, level-up panel at +0.8 s; both have null guards.
-- **BUG-2 PARTIAL FIX** — `TombakanOnboarding.cs:38-44` now detects and surfaces daily-bonus level-up in the daily panel text. The level reward application gap remains (BUG-NEW-2 above).
+**Proposed fix:** Add `PauseGame()` / `ResumeGame()` methods that toggle `Time.timeScale` (or freeze `gameRunning` and `Time.unscaledDeltaTime` already used correctly). Add a HUD pause button that also surfaces a "Kembali ke menu" (Return to menu) option that calls `EndGame()` directly.
 
 ---
 
-## UX Gaps
+### BUG-8 (MEDIUM) — Zen mode increments `float.MaxValue` on every correct hit
 
-- [ ] **UX-1** *(known, still open)* — No throw-mechanic tutorial for first-time players; after water placement no hint explains how to throw — first game, after water is placed — add a timed hint panel: "Tekan tombol untuk melempar tombak!" visible for 8 s on game start; wire via `TombakanOnboarding` or `GameManager.StartGame()`
-- [ ] **UX-NEW-2** — `greetingPanel` and `dailyBonusPanel` can both be active simultaneously on a returning player's first daily session (rare edge: new player who accrued XP without a best score — or if panels are both present and onboarding flags are set); no mutual exclusion exists between them — first daily launch — show greeting first, only trigger daily bonus panel after greeting is dismissed, or check for both conditions in `TombakanOnboarding.Start()`
-- [ ] **UX-NEW-3** — Achievement toast appears 0.4 s after level-up panel, interrupting the level-up reading moment; combined with `celebrationText` that may overwrite `levelUpText` in `ApplyLevelReward`, the level-up panel content is unstable during its display window — result screen — delay achievement toast to at least +3.5 s (after level-up panel has been visible for 2+ seconds), or require player tap-to-dismiss level-up panel before toasts begin
-- [ ] **UX-NEW-4** — `ColorHexLocalization.ToIndonesian` falls back to the raw hex string (e.g. `"E6993F"`) when a species colour is not in the `Dict.cs` map; players see a hex code as the target label when playing with a catalog that has custom colours — any game with FishCatalog and non-palette species — either map all species `baseColor` values in `Dict.cs`, or use `FishSpecies.displayName` as the target label instead of the colour name when a catalog is active (the `targetSpeciesLabel` already shows the species name, so the colour label could be suppressed when a catalog is active)
+**File:** `GameManager.cs` line 454, `OnFishHit`  
+**Sessions affected:** 7
+
+In `OnFishHit()`:
+```csharp
+timeLeft += TimeBonus.ForHit(comboStreak);
+```
+There is no `currentMode == GameMode.Zen` guard. In Zen mode, `timeLeft` is initialised to `float.MaxValue` (line 223). Repeated additions of small floats to `float.MaxValue` are a no-op in IEEE 754 (the value stays at `float.MaxValue` due to precision loss), but eventually with enough hits or large bonuses the value becomes `float.PositiveInfinity`. Once `timeLeft` is `Infinity`, any future Standard-mode game that checks `timeLeft <= warningTimeThreshold` will never trigger the timer warning, and `timerBarFill.fillAmount = Mathf.Clamp01(timeLeft / gameDuration)` evaluates to `NaN.Clamp01 = 0`, causing the bar to show empty immediately.
+
+This only manifests if a player plays Zen mode and then Standard mode **within the same session** (without restarting), and `timeLeft` somehow carries over — but `StartGame()` resets `timeLeft` correctly (line 223), so in practice no cross-session corruption occurs. The risk is low today but is a latent defect.
+
+**Proposed fix:** Add a Zen-mode guard: `if (currentMode != GameMode.Zen) timeLeft += TimeBonus.ForHit(comboStreak);`
 
 ---
 
-## Polish Opportunities
+### UX-1 (LOW-MEDIUM) — "Sian" not a recognised Indonesian colour word
 
-- [ ] **POLISH-1** *(partially addressed, still improvable)* — Achievement toast fires 0.4 s after level-up panel; on small screens both may overlap; the level-up panel has no auto-dismiss or tap-to-continue, so it stays visible behind the toast — result screen — add a tap-to-dismiss to the level-up panel, or auto-dismiss it after 2 s before the first achievement toast
-- [ ] **POLISH-2** *(known, still open)* — `HapticFeedback.PlayCorrect` and `PlayWrong` both call `Handheld.Vibrate()` with identical behaviour; no tactile distinction between correct and wrong hits — `HapticFeedback.cs:14,22` — implement Android-specific duration (short pulse for correct, double-pulse for wrong) via `AndroidJavaObject("android.os.Vibrator")`; use `UnityEngine.InputSystem.Haptics` on iOS
-- [ ] **POLISH-3** *(still open)* — `ApplyLevelReward` overwrites `levelUpText.text` with `reward.celebrationText` at `GameManager.cs:387-388`; if called in the same coroutine frame as `ShowLevelUp`, the original `"Level N! Selamat!"` text is overwritten before the player can read it — level-up moment — only apply `celebrationText` if a delay has elapsed, or keep both texts in separate UI elements
-- [ ] **POLISH-NEW-1** — `ColorSummary.Format` always appends `×N` even when N=1 (e.g. `"Merah ×1"` instead of `"Merah"`) for single catches; correct fish result text looks cluttered when fish are varied — `ColorSummary.cs:44-46` — show `×N` only when `N > 1`: `sb.Append(name).Append(counts[n] > 1 ? $" ×{counts[n]}" : "")`
-- [ ] **POLISH-NEW-2** — `ProgressionHUD.Refresh()` is triggered by `OnEnable` only; if the HUD panel is always active, XP bar does not update mid-game when combo bonuses add time (no XP is awarded mid-game, so the bar only changes at EndGame — this is by design, but the bar also does not update when daily bonus XP is granted in `TombakanOnboarding.Start()`); level and XP shown on the main screen may be stale after the daily bonus — after `ShowDailyBonus` fires — call `ProgressionHUD.I.Refresh()` (or expose a static refresh hook) from `TombakanOnboarding` after claiming daily bonus
+**File:** `Dict.cs` line 12  
+**Sessions affected:** 2
+
+The colour hex `00FFFF` is labelled `"Sian"` — a direct transliteration of the English word "Cyan". This word is not part of standard Indonesian colour vocabulary. Common Indonesian speakers would use *"biru muda"* (light blue), *"toska"*, or *"pirus"* (turquoise). Similarly `"Magenta"` (`FF00FF`) is an English loanword with no common Indonesian equivalent; *"merah ungu muda"* or simply leaving it at the hex until an artist-approved name is assigned would be preferable.
+
+When the target is "Sian" and a player does not know the word, they cannot identify the correct fish from the label alone, defeating the vocabulary-reinforcement mechanic.
+
+**Proposed fix:** Replace `"Sian"` → `"Toska"` and `"Magenta"` → `"Merah Lembayung"` (or consult a native Indonesian speaker for preferred usage). Update matching test fixtures.
+
+---
+
+### UX-2 (LOW) — AR placement failure is silent
+
+**File:** `PlaceWaterOnPlane.cs` lines 22–38  
+**Sessions affected:** 8
+
+When `raycastManager.Raycast(...)` returns `false` (no plane detected at the tapped point), `Update()` returns immediately with no user feedback. In low-light or featureless environments, AR plane detection can take 10–30 s to find a usable surface. Players repeatedly tap the floor with no response and assume the app is frozen.
+
+**Proposed fix:** Display a localised hint ("Arahkan kamera ke lantai untuk mendeteksi permukaan" — point the camera at the floor) whenever `Input.touchCount > 0` and raycast fails. A simple `TMP_Text` overlay in the AR placement UI, hidden once placement succeeds, would suffice.
+
+---
+
+### UX-3 (LOW) — No "Play Again" shortcut on result screen
+
+**File:** `GameManager.cs` — `EndGame()` shows `resultContainer` but no replay path  
+**Sessions affected:** 5
+
+After `EndGame()`, `resultContainer` is shown. The only way to replay is to navigate back to `mainScreenUI` via a dismiss button and then tap the start button — two taps. `StartGame()` exists and correctly resets all state, but is not called directly from the result screen. Competitive and speed-runner players expressed friction replaying quickly.
+
+**Proposed fix:** Wire a "Main lagi" (Play Again) button directly on `resultContainer` that calls `GameManager.I.StartGame()`.
+
+---
+
+## Summary Table
+
+| ID | Severity | File | Short description |
+|----|----------|------|-------------------|
+| BUG-1 | CRITICAL | TombakanOnboarding.cs | No throw-mechanic tutorial for first-timers |
+| BUG-2 | HIGH | PlaceWaterOnPlane.cs:37 | Water placement permanent; no reposition path |
+| BUG-3 | HIGH | DailyChallenge.cs:58, TombakanOnboarding.cs | Daily level-up reward never applied |
+| BUG-4 | HIGH | GameManager.cs:441 | targetColor float mismatch silently misscores catalog hits |
+| BUG-5 | MEDIUM | SpearThrower.cs, SpearHit.cs | Two simultaneous spears cause double-hit and round-skip |
+| BUG-6 | MEDIUM | TombakanOnboarding.cs:33 | greetingPanel blocks menu if dismiss button not wired |
+| BUG-7 | MEDIUM | GameManager.cs | No pause or in-game quit path |
+| BUG-8 | MEDIUM | GameManager.cs:454 | Zen mode increments float.MaxValue on each correct hit |
+| UX-1 | LOW-MEDIUM | Dict.cs:12 | "Sian" not standard Indonesian; players miss target colour |
+| UX-2 | LOW | PlaceWaterOnPlane.cs | Silent failure when AR plane not yet detected |
+| UX-3 | LOW | GameManager.cs | No "Play Again" button on result screen |
+
+---
+
+## Recommended Week 7 Sprint Priority
+
+1. **BUG-1** (throw tutorial) — already in Week 7 candidates; must ship for new-user retention  
+2. **BUG-2** (reposition button) — already in Week 7 candidates; blocks all bad-placement sessions  
+3. **BUG-3** (daily reward grant) — already in Week 7 BUG-2 partial; one-line fix in TombakanOnboarding  
+4. **BUG-5** (double-spear hit) — pure C# fix, no Unity Editor required  
+5. **BUG-4** (species ID comparison) — pure C# fix, closes silent scoring bug  
+6. **BUG-6** (greeting panel auto-dismiss) — 1-line `Invoke` addition  
+7. **BUG-7** (pause/quit) — medium scope; can scope to "quit to menu" only for Week 7  
+
+---
+
+## Validation Week 7
+
+**Re-tester:** Claude Sonnet 4.6 (automated static analysis + session trace)  
+**Date:** 2026-09-07  
+**Method:** Read each changed file, trace the player session paths from TESTER_REPORT_week7.md, confirm acceptance criteria against the live code.
+
+| Task ID | Status | Evidence |
+|---------|--------|----------|
+| TASK-01 | PASS | `TombakanOnboarding.cs`: `ShowThrowHint()` (lines 97–103) activates `throwHintPanel`/`throwHintPointer` and subscribes `HideThrowHint` to `SpearThrower.OnThrowFired`. `StartCoaching()` (lines 86–91) guards on `ProgressionStore.GetTotalXp() == 0`. `SpearThrower.cs` line 10 declares `public static event System.Action OnThrowFired`; line 56 invokes it inside `ThrowSpear()`. First-time session trace: AR placement completes → `StartCoaching()` called → hint panel activates → player taps throw button → `OnThrowFired` fires → `HideThrowHint()` unsubscribes and deactivates panel. Returning-player path unchanged (XP > 0 skips `ShowThrowHint`). All acceptance criteria met. |
+| TASK-02 | PASS | `DailyChallenge.cs` line 32: signature changed to `TryClaimDailyBonus(out int xpAwarded, out int streak, out int newLevel)`; line 59 now assigns `newLevel = ProgressionStore.AddXp(xpAwarded)` instead of discarding the return value. `TombakanOnboarding.cs` line 42 calls the new out-param signature; lines 47–48 call `GameManager.I.ApplyLevelReward(newLevel)` when `newLevel > 0`. Daily level-up session trace (Dewi/Budi personas): `TryClaimDailyBonus` returns `newLevel = 2` → `ShowDailyBonus` shows panel → `ApplyLevelReward(2)` applies coins/unlocks from `LevelRewardTable`. EndGame level-up path not touched. All acceptance criteria met. |
+| TASK-03 | PASS | `PlaceWaterOnPlane.cs` lines 77–88: `public void Reposition()` hides `waterPlane`, calls `fishSpawner.ClearAll()`, re-enables `planeManager`/`pointCloudManager`, and sets `enabled = true` to re-arm `Update()`. Scene file `GamePlay.unity` confirms: `m_Name: RepositionButton` at line 1754, `m_text: Posisi ulang` at line 1931, `m_MethodName: Reposition` wired via UnityEvent at line 1826, and `repositionButton: {fileID: 750000001}` serialized on the GameManager component at line 6370. `GameManager.cs` line 214 calls `repositionButton.SetActive(false)` inside `StartGame()`, satisfying the pre-game-only guard. Bad-placement session trace (Budi persona): bad tap → tap "Posisi ulang" → `Reposition()` fires → water hidden, fish cleared, AR scanning re-enabled → valid plane tap re-places water and fish spawn correctly. All acceptance criteria met. |
+| TASK-04 | FAIL | `Dict.cs` line 20 still reads `{ "00FFFF", "Sian" }` (expected `"Toska"`); line 21 still reads `{ "FF00FF", "Magenta" }` (expected `"Merah Lembayung"`). Neither entry was updated. Session trace (Rina persona): target colour `00FFFF` displays as "Sian" — non-standard Indonesian; player cannot identify the correct fish from the label. Acceptance criteria not met: both colour name strings remain unchanged from the pre-Week-7 state. |

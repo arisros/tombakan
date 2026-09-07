@@ -75,6 +75,9 @@ public class GameManager : MonoBehaviour
     [Header("Fish Managers")]
     public FishSpawner fishSpawner;
 
+    [Header("Placement")]
+    public GameObject repositionButton; // hidden once the game is running
+
     [Header("Data")]
     public LevelRewardTable levelRewardTable;
 
@@ -208,6 +211,7 @@ public class GameManager : MonoBehaviour
     {
         mainScreenUI.SetActive(false);
         gamePlayUI.SetActive(true);
+        if (repositionButton != null) repositionButton.SetActive(false);
 
         if (AudioManager.I != null) AudioManager.I.PlayGameplayBGM();
 
@@ -369,6 +373,18 @@ public class GameManager : MonoBehaviour
             yield return new WaitForSecondsRealtime(2f);
             achievementToastPanel.SetActive(false);
         }
+    }
+
+    /// <summary>
+    /// Public entry point used by external callers (e.g. onboarding daily-bonus path).
+    /// Resolves the reward for <paramref name="newLevel"/> from the table, shows the
+    /// level-up panel, and applies currency / unlock rewards.
+    /// </summary>
+    public void ApplyLevelReward(int newLevel)
+    {
+        if (newLevel <= 0) return;
+        ShowLevelUp(newLevel);
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(newLevel));
     }
 
     void ApplyLevelReward(LevelReward reward)

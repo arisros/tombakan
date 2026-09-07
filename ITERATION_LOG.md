@@ -1,5 +1,35 @@
 # Iteration Log
 
+## Week 7 — 2026-09-07
+
+**Branch:** `iteration/week-7`
+**Tasks completed:** 3 of 4 (TASK-04 FAIL — Dict.cs colour names not updated)
+
+| Task | Status | Description | Files Changed |
+|------|--------|-------------|---------------|
+| TASK-01 | PASS | Throw-mechanic tutorial hint for first-time players: `ShowThrowHint()` / `HideThrowHint()` added to `TombakanOnboarding`; `StartCoaching()` guards on `totalXp == 0`; `SpearThrower.OnThrowFired` static event added; hint panel auto-dismissed on first throw | `TombakanOnboarding.cs`, `SpearThrower.cs` |
+| TASK-02 | PASS | Daily level-up reward never applied: `DailyChallenge.TryClaimDailyBonus` now exposes `out int newLevel`; `TombakanOnboarding.Start()` calls `GameManager.I.ApplyLevelReward(newLevel)` when `newLevel > 0` | `DailyChallenge.cs`, `TombakanOnboarding.cs` |
+| TASK-03 | PASS | Reposition button: `PlaceWaterOnPlane.Reposition()` re-enables component, hides water, clears fish, re-enables ARPlaneManager; "Posisi ulang" button added to scene, hidden after `StartGame()` | `PlaceWaterOnPlane.cs`, `GamePlay.unity` |
+| TASK-04 | FAIL | Dict.cs `00FFFF`→"Toska" and `FF00FF`→"Merah Lembayung" — strings not updated; "Sian" / "Magenta" remain; deferred to Week 8 | — |
+
+**New findings (from Week 7 tester validation):**
+- BUG-4: `targetColor` float-precision mismatch when species catalog is active (silent mis-score) — deferred to Week 8
+- BUG-5: Two simultaneous spears cause double-hit and round-skip — deferred to Week 8
+- BUG-6: `greetingPanel` has no auto-dismiss timeout — deferred (scene wiring blocked)
+- BUG-7: No pause or in-game quit path — defer to Week 8 ("quit to menu" only)
+- BUG-8: Zen mode increments `float.MaxValue` on every correct hit — low real-world risk; deferred
+- UX-2: AR placement failure is silent (no feedback on failed raycast tap) — deferred
+- UX-3: No "Play Again" shortcut on result screen — deferred
+
+**Artefacts:** `TESTER_REPORT_week7.md`, `ITERATION_week7_SCOPE.md`,
+`Assets/Tests/EditMode/Week7_Task01_ThrowHintTests.cs`,
+`Assets/Tests/EditMode/Week7_Task02_DailyLevelUpTests.cs`,
+`Assets/Tests/EditMode/Week7_Task03_RepositionTests.cs`,
+`Assets/Tests/EditMode/Week7_Task04_DictColorNameTests.cs`,
+`Assets/Tests/PlayMode/Week7_Task03_RepositionPlayModeTests.cs`
+
+---
+
 ## Week 6 — 2026-06-03
 
 **Branch:** `iteration/week-6`

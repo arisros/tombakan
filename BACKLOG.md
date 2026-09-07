@@ -122,8 +122,19 @@
 - [x] Result celebrations staggered — badge at +0.4 s, level-up panel at +0.8 s
 - [x] `AchievementToastPanel` + `AchievementToastText` added to scene, wired to `GameManager`
 
-## Week 7 Candidates (from Week 6 tester report)
-- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` coaching step + hint panel ("Sentuh tombol untuk melempar tombak")
-- [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
-- [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02 partial from Week 5)
-- [ ] `DailyChallenge.TryClaimDailyBonus` — propagate level-up return value to caller so rewards are applied (BUG-2 partial — TombakanOnboarding fixed; DailyChallenge.cs:58 reward grant still skipped)
+### Week 7 (2026-09-07)
+- [x] Throw-mechanic tutorial hint for first-time players — `TombakanOnboarding.ShowThrowHint()` + `SpearThrower.OnThrowFired` event; hint auto-dismisses on first throw (TASK-01 PASS)
+- [x] `DailyChallenge.TryClaimDailyBonus` — now returns `out int newLevel`; `TombakanOnboarding` calls `GameManager.I.ApplyLevelReward(newLevel)` when `newLevel > 0` (TASK-02 PASS)
+- [x] "Posisi ulang" reposition button — `PlaceWaterOnPlane.Reposition()` re-enables component, hides water, clears fish, re-enables AR scanning; button hidden after `StartGame()` (TASK-03 PASS)
+- [ ] Fix Dict.cs colour names (`00FFFF` → "Toska", `FF00FF` → "Merah Lembayung") — NOT DONE; deferred to Week 8 (TASK-04 FAIL)
+- [ ] Platform-specific haptic differentiation (POLISH-2) — deferred
+
+## Week 8 Candidates (from Week 7 tester report)
+- [ ] **Dict.cs colour names** — `00FFFF` should return `"Toska"` (not `"Sian"`); `FF00FF` should return `"Merah Lembayung"` (not `"Magenta"`); update matching test fixtures (TASK-04 rollover — high player-impact)
+- [ ] **BUG-4** — `targetColor` float-precision mismatch when species catalog active: replace `fishColor == targetColor` with species-ID comparison in `OnFishHit` (`GameManager.cs:441`)
+- [ ] **BUG-5** — Two simultaneous spears cause double-hit and round-skip: cancel previous spear in `SpearThrower.ThrowSpear()` before instantiating new one (`SpearThrower.cs:68`)
+- [ ] **BUG-7** — No in-game pause or quit path: add `PauseGame()` + "Kembali ke menu" option scoped to `EndGame()` call only (`GameManager.cs`)
+- [ ] **BUG-6** — `greetingPanel` auto-dismiss fallback: `Invoke(nameof(DismissGreeting), 5f)` when button not yet wired (`TombakanOnboarding.cs:38`) — blocked on scene wiring
+- [ ] **BUG-8** — Zen mode adds bonus to `float.MaxValue`: add `if (currentMode != GameMode.Zen)` guard before `timeLeft += TimeBonus.ForHit(comboStreak)` (`GameManager.cs:454`)
+- [ ] **UX-2** — Silent AR placement failure: show localised hint when `touchCount > 0` and raycast fails (`PlaceWaterOnPlane.cs`)
+- [ ] **UX-3** — No "Play Again" button on result screen: wire "Main lagi" button on `resultContainer` to call `GameManager.I.StartGame()` (`GameManager.cs`)
