@@ -57,12 +57,12 @@ public class ColorSummaryWeek5Tests
     }
 
     [Test]
-    public void Format_SingleEntry_ShowsNameTimesOne()
+    public void Format_SingleEntry_ShowsNameOnly()
     {
-        // "FF0000" → "Merah ×1"
+        // "FF0000" → "Merah" (×1 suppressed — Week 7 POLISH-NEW-1)
         var result = ColorSummary.Format(new List<string> { "FF0000" });
         Assert.IsTrue(result.Contains("Merah"), $"Expected 'Merah' in '{result}'");
-        Assert.IsTrue(result.Contains("×1"), $"Expected '×1' in '{result}'");
+        Assert.IsFalse(result.Contains("×1"), "Single catch must not show ×1 suffix");
     }
 
     [Test]
@@ -85,7 +85,8 @@ public class ColorSummaryWeek5Tests
         int bluePos = result.IndexOf("Biru");
         Assert.Greater(bluePos, redPos, "Red (first caught) should appear before Blue");
         Assert.IsTrue(result.Contains("Merah ×2"), "Red caught twice");
-        Assert.IsTrue(result.Contains("Biru ×1"),  "Blue caught once");
+        Assert.IsTrue(result.Contains("Biru"), "Blue caught once");
+        Assert.IsFalse(result.Contains("Biru ×1"), "Single blue catch must not show ×1 suffix");
     }
 
     [Test]

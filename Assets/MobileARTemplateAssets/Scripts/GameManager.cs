@@ -64,6 +64,9 @@ public class GameManager : MonoBehaviour
     public TMP_Text resultBestScoreText;
     public GameObject newRecordBadge;
 
+    [Header("Zen Mode Exit (optional/null-safe)")]
+    public GameObject zenEndButton;   // shown only in Zen mode; onClick → EndGameManual()
+
     [Header("Progression HUD (optional/null-safe)")]
     public TMP_Text levelBadgeText;     // shows "Lv 3"
     public Image xpBarFill;             // fill amount 0–1
@@ -246,17 +249,21 @@ public class GameManager : MonoBehaviour
         resultContainer.SetActive(false);
         if (newRecordBadge != null) newRecordBadge.SetActive(false);
         if (levelUpPanel   != null) levelUpPanel.SetActive(false);
+        if (zenEndButton   != null) zenEndButton.SetActive(currentMode == GameMode.Zen);
 
         UpdateScoreUI();
         PickNewTarget();
 
         happyFeedback.SetActive(false);
         sadFeedback.SetActive(false);
+
+        TombakanOnboarding.I?.NotifyGameStarted();
     }
 
     void EndGame()
     {
-        if (fishSpawner != null) fishSpawner.ClearAll();
+        if (fishSpawner  != null) fishSpawner.ClearAll();
+        if (zenEndButton != null) zenEndButton.SetActive(false);
 
         resultContainer.SetActive(true);
         resultScoreText.text = score.ToString();
@@ -289,11 +296,22 @@ public class GameManager : MonoBehaviour
         StartCoroutine(StaggerResultCelebrations(isRecord, newLevel));
 
         // --- Achievements ---
+        int levelBeforeAchievements = ProgressionStore.GetLevel();
         if (achievementCatalog != null)
-        {
-            string[] newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
+            newlyUnlocked = AchievementChecker.CheckAll(this, achievementCatalog);
+        int levelAfterAch = ProgressionStore.GetLevel();
+        int finalLevel = newLevel > 0 ? newLevel : (levelAfterAch > levelBeforeAch ? levelAfterAch : 0);
+
+        // Stagger badge and level-up panel (0.4 s and 0.8 s after result screen)
+        StartCoroutine(StaggerResultCelebrations(isRecord, finalLevel));
+
+        if (newlyUnlocked.Length > 0)
             StartCoroutine(ShowAchievementsSequenced(newlyUnlocked, achievementCatalog));
         }
+        // Achievement XP grants can silently level up; surface with panel + rewards after toasts
+        int levelAfterAchievements = ProgressionStore.GetLevel();
+        if (levelAfterAchievements > levelBeforeAchievements && newLevel == 0)
+            StartCoroutine(DelayedAchievementLevelUp(levelAfterAchievements));
 
         if (timerPulseRoutine != null)
         {
@@ -334,6 +352,13 @@ public class GameManager : MonoBehaviour
             levelUpText.text = $"Level {newLevel}! Selamat!";
     }
 
+    public void HandleLevelReward(int newLevel)
+    {
+        if (newLevel <= 0) return;
+        ShowLevelUp(newLevel);
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(newLevel));
+    }
+
     System.Collections.IEnumerator StaggerResultCelebrations(bool isRecord, int newLevel)
     {
         yield return new WaitForSecondsRealtime(0.4f);
@@ -353,9 +378,17 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    // Fires level-up panel after achievement toasts have had time to display
+    System.Collections.IEnumerator DelayedAchievementLevelUp(int level)
+    {
+        yield return new WaitForSecondsRealtime(3.5f);
+        ShowLevelUp(level);
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(level));
+    }
+
     System.Collections.IEnumerator ShowAchievementsSequenced(string[] ids, AchievementCatalog catalog)
     {
-        yield return new WaitForSecondsRealtime(1.2f);
+        yield return new WaitForSecondsRealtime(3.5f);
 
         foreach (string id in ids)
         {
@@ -404,6 +437,15 @@ public class GameManager : MonoBehaviour
             levelUpText.text = reward.celebrationText;
     }
 
+    /// <summary>
+    /// Public overload — applies the level-up reward table entry for the given level.
+    /// Called by TombakanOnboarding when a daily-bonus XP grant triggers a level-up.
+    /// </summary>
+    public void ApplyLevelReward(int newLevel)
+    {
+        ApplyLevelReward(levelRewardTable?.GetRewardForLevel(newLevel));
+    }
+
     void UpdateScoreUI()
     {
         scoreText.text = score.ToString();
@@ -429,6 +471,8 @@ public class GameManager : MonoBehaviour
         {
             targetColor = fishSpawner.CurrentTargetSpecies.baseColor;
             targetColorImage.color = targetColor;
+            if (targetColorLabel != null)
+                targetColorLabel.text = ColorHexLocalization.ToIndonesian(targetColor);
         }
 
         if (targetSpeciesLabel != null)
@@ -480,6 +524,8 @@ public class GameManager : MonoBehaviour
             }
 
             ShowHappy(earned, multiplier);
+            if (targetColorLabel != null) targetColorLabel.text = "—";
+            if (targetColorImage != null) targetColorImage.color = Color.grey;
             if (AudioManager.I != null) AudioManager.I.PlayCorrect();
             if (ScreenShake.I != null) ScreenShake.I.ShakeOnCorrect();
             HapticFeedback.PlayCorrect();
@@ -488,8 +534,9 @@ public class GameManager : MonoBehaviour
         {
             comboStreak = 0;
             wrongHitCount++;
+            int actualDeduction = Mathf.Min(penaltyPerWrongHit, score);
             score = ClampScore(score - penaltyPerWrongHit);
-            ShowSad();
+            ShowSad(actualDeduction);
             if (AudioManager.I != null) AudioManager.I.PlayWrong();
             if (ScreenShake.I != null) ScreenShake.I.ShakeOnWrong();
             HapticFeedback.PlayWrong();
@@ -499,6 +546,7 @@ public class GameManager : MonoBehaviour
 
         float delay = PacingRules.HitDelayForProgress(hitDelay, correctHitCount);
         if (spearThrower) spearThrower.LockThrow(delay);
+        CancelInvoke(nameof(PickNewTarget));
         Invoke(nameof(PickNewTarget), delay + 0.8f);
     }
 
@@ -518,10 +566,10 @@ public class GameManager : MonoBehaviour
         Invoke(nameof(HideFeedback), 1f);
     }
 
-    void ShowSad()
+    void ShowSad(int actualDeduction)
     {
         sadFeedback.SetActive(true);
-        sadFeedbackText.text = $"-{penaltyPerWrongHit}!";
+        sadFeedbackText.text = actualDeduction > 0 ? $"-{actualDeduction}!" : "Miss!";
         Invoke(nameof(HideFeedback), 1f);
     }
 

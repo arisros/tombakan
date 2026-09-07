@@ -35,7 +35,7 @@
 
 **Proposed fix:** Implement the open Week 7 candidate (UX-1 in BACKLOG): add a `TombakanOnboarding` coaching step that shows a hint panel ("Sentuh tombol untuk melempar tombak") with a finger-gesture overlay pointing at the throw button. Auto-dismiss after first successful throw. This is already tracked in BACKLOG — move it to the current sprint.
 
----
+- [ ] **No "re-position water" button** — player places water in wrong position (corner of plane, wall shadow, etc.) — `PlaceWaterOnPlane.cs:37` sets `enabled = false` with no re-enable path; add `public void ResetPlacement()` that sets `waterPlane.SetActive(false)` and re-enables the component, wire to a HUD button that is hidden once `GameManager.gameRunning` is true
 
 ### BUG-2 (HIGH) — AR water placement permanent; no repositioning path
 
@@ -50,7 +50,7 @@
 
 **Proposed fix:** Add a "Posisi ulang" (Reposition) button to the main screen or a pause panel. Tapping it re-enables `PlaceWaterOnPlane`, hides the waterPlane, calls `fishSpawner.ClearAll()`, and re-enables ARPlaneManager scanning. Guard the button so it only appears before `StartGame()` is called (to preserve the mid-game guard).
 
----
+- [ ] **Platform-specific haptic differentiation** (POLISH-2, still open) — implement Android-specific duration via `AndroidJavaObject("android.os.Vibrator")` (short 40 ms for correct, 200 ms double-pulse for wrong); use `UnityEngine.InputSystem.Haptics` `.light`/`.heavy` on iOS; gate behind `#if UNITY_ANDROID` / `#if UNITY_IOS`; requires device test matrix before merge
 
 ### BUG-3 (HIGH) — Daily-bonus level-up reward silently discarded
 
@@ -82,7 +82,8 @@ However, if `FishSpecies.baseColor` was authored in the Inspector with any round
 
 **Proposed fix:** Replace `fishColor == targetColor` with a species-ID comparison when catalog is active: `bool correct = (!string.IsNullOrEmpty(speciesId) && speciesId == fishSpawner.CurrentTargetSpecies?.id) || fishColor == targetColor`. This eliminates float dependency when species IDs are available.
 
----
+**Step 5 — Start game**
+`GameManager.StartGame()` (line 207). Fish spawn. Target label shows "Merah". **No hint exists for how to throw.** Player taps the water surface — `PlaceWaterOnPlane` is disabled, no response. Player taps a fish directly — `SpearHit` is attached to the spear projectile, not a tap target, so nothing happens. Player is confused. Eventually discovers the throw button or abandons.
 
 ### BUG-5 (MEDIUM) — Two simultaneous spears can double-hit in the same round
 
@@ -125,7 +126,11 @@ Once `StartGame()` hides `mainScreenUI` and begins the 60 s countdown, there is 
 
 **Proposed fix:** Add `PauseGame()` / `ResumeGame()` methods that toggle `Time.timeScale` (or freeze `gameRunning` and `Time.unscaledDeltaTime` already used correctly). Add a HUD pause button that also surfaces a "Kembali ke menu" (Return to menu) option that calls `EndGame()` directly.
 
----
+**Step 2 — Wrong hit**
+Player hits a blue fish while target is red. `OnFishHit(Color.blue, "id")` (GameManager.cs:438). `correct = false`. `score = ClampScore(0 - 25) = 0`. `ShowSad()` → `"-25!"`. Score display stays at 0. **BUG-W7-5:** feedback shows `-25` when deduction was absorbed by clamp.
+
+**Step 3 — Timer expires**
+`EndGame()`. `resultAccuracyText.text = Accuracy.Format(0, 3) = "0/3 (0%)"`. TierEmpty shown. `resultXpText.text = ""` (correctly suppressed — Week 5 fix). No further confusion.
 
 ### BUG-8 (MEDIUM) — Zen mode increments `float.MaxValue` on every correct hit
 
@@ -155,7 +160,7 @@ When the target is "Sian" and a player does not know the word, they cannot ident
 
 **Proposed fix:** Replace `"Sian"` → `"Toska"` and `"Magenta"` → `"Merah Lembayung"` (or consult a native Indonesian speaker for preferred usage). Update matching test fixtures.
 
----
+**Achievement toast + level-up panel overlap:** level-up panel at +0.8 s, achievement toast at +1.2 s. Player sees both simultaneously for 0.4 s. Polish gap.
 
 ### UX-2 (LOW) — AR placement failure is silent
 
@@ -195,7 +200,8 @@ After `EndGame()`, `resultContainer` is shown. The only way to replay is to navi
 | UX-2 | LOW | PlaceWaterOnPlane.cs | Silent failure when AR plane not yet detected |
 | UX-3 | LOW | GameManager.cs | No "Play Again" button on result screen |
 
----
+**Step 2 — Player opens settings, toggles ON**
+`ColourBlindSettings.Toggle()` (ColourBlindSettings.cs:13): `SetEnabled(true)`. Persists to `PlayerPrefs`. **Nothing else happens.** `ColourBlindToggleUI` is not shown to call `FindObjectsOfType<FishShapeOverlay>()` and invoke `OnSettingChanged()`, and even if it did there is no wiring. All currently-spawned fish have `label.enabled = false` with no refresh path.
 
 ## Recommended Week 7 Sprint Priority
 

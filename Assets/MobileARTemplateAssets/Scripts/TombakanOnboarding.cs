@@ -64,6 +64,9 @@ public class TombakanOnboarding : MonoBehaviour
                 : baseText;
         }
 
+        if (newLevel > 0 && GameManager.I != null)
+            GameManager.I.ApplyLevelReward(newLevel);
+
         Invoke(nameof(HideDailyBonus), 3f);
     }
 
@@ -75,8 +78,14 @@ public class TombakanOnboarding : MonoBehaviour
 
     public void DismissGreeting()
     {
-        if (greetingPanel != null) greetingPanel.SetActive(false);
-        if (goalManager  != null) goalManager.StartCoaching();
+        if (greetingPanel  != null) greetingPanel.SetActive(false);
+        if (goalManager    != null) goalManager.StartCoaching();
+        if (throwHintPanel != null) throwHintPanel.SetActive(true);
+    }
+
+    public void DismissThrowHint()
+    {
+        if (throwHintPanel != null) throwHintPanel.SetActive(false);
     }
 
     /// <summary>
