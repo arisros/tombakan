@@ -17,6 +17,10 @@ public class TombakanOnboarding : MonoBehaviour
     public GameObject dailyBonusPanel;       // shown when a daily bonus is claimed
     public TMP_Text dailyBonusText;          // e.g. "Bonus harian +100 XP! Streak 3 hari!"
 
+    [Header("Throw Hint (first-time only)")]
+    public GameObject throwHintPanel;        // panel with "Sentuh tombol untuk melempar tombak"
+    public RectTransform throwHintPointer;   // optional visual arrow pointing at the throw button
+
     [Header("Settings")]
     public bool skipOnboardingForReturning = true; // if true, veteran players skip AR steps
 
@@ -35,12 +39,13 @@ public class TombakanOnboarding : MonoBehaviour
         }
 
         // Check for daily bonus — claim on every session start
-        int levelBefore = ProgressionStore.GetLevel();
-        if (DailyChallenge.TryClaimDailyBonus(out int xp, out int streak))
+        if (DailyChallenge.TryClaimDailyBonus(out int xp, out int streak, out int newLevel))
         {
-            int levelAfter = ProgressionStore.GetLevel();
-            int newLevel = levelAfter > levelBefore ? levelAfter : 0;
             ShowDailyBonus(xp, streak, newLevel);
+
+            // Apply the level-up reward immediately so coins/unlocks are not lost
+            if (newLevel > 0 && GameManager.I != null)
+                GameManager.I.ApplyLevelReward(newLevel);
         }
     }
 
@@ -59,6 +64,9 @@ public class TombakanOnboarding : MonoBehaviour
                 : baseText;
         }
 
+        if (newLevel > 0 && GameManager.I != null)
+            GameManager.I.ApplyLevelReward(newLevel);
+
         Invoke(nameof(HideDailyBonus), 3f);
     }
 
@@ -70,7 +78,46 @@ public class TombakanOnboarding : MonoBehaviour
 
     public void DismissGreeting()
     {
-        if (greetingPanel != null) greetingPanel.SetActive(false);
-        if (goalManager  != null) goalManager.StartCoaching();
+        if (greetingPanel  != null) greetingPanel.SetActive(false);
+        if (goalManager    != null) goalManager.StartCoaching();
+        if (throwHintPanel != null) throwHintPanel.SetActive(true);
+    }
+
+    public void DismissThrowHint()
+    {
+        if (throwHintPanel != null) throwHintPanel.SetActive(false);
+    }
+
+    /// <summary>
+    /// Called after AR placement succeeds (wire via UnityEvent or PlaceWaterOnPlane callback).
+    /// Shows the throw-mechanic hint for first-time players only.
+    /// </summary>
+    public void StartCoaching()
+    {
+        bool isFirstTimePlayer = ProgressionStore.GetTotalXp() == 0;
+        if (isFirstTimePlayer)
+            ShowThrowHint();
+    }
+
+    /// <summary>
+    /// Activates the throw hint panel and registers a one-shot listener that
+    /// auto-dismisses it on the first throw event. Safe to call when panel is null.
+    /// </summary>
+    public void ShowThrowHint()
+    {
+        if (throwHintPanel == null) return;
+        throwHintPanel.SetActive(true);
+        if (throwHintPointer != null) throwHintPointer.gameObject.SetActive(true);
+        SpearThrower.OnThrowFired += HideThrowHint;
+    }
+
+    /// <summary>
+    /// Deactivates the throw hint panel and unsubscribes the one-shot listener.
+    /// </summary>
+    public void HideThrowHint()
+    {
+        SpearThrower.OnThrowFired -= HideThrowHint;
+        if (throwHintPanel != null) throwHintPanel.SetActive(false);
+        if (throwHintPointer != null) throwHintPointer.gameObject.SetActive(false);
     }
 }

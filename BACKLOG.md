@@ -141,3 +141,9 @@
 - [ ] **UX-4: targetColorLabel shows raw hex for catalog-based species** — `GameManager.PickNewTarget` sets `targetColorLabel.text` before species is resolved; prefer `targetSpecies.displayName` when a species is active.
 - [ ] **POLISH-3: Achievement toast no dismiss gesture** — `ShowAchievementsSequenced` auto-dismisses; speed-runner tapping "play again" cannot skip the toast sequence; toasts may persist across scene transition.
 - [ ] Platform-specific haptic differentiation (POLISH-2) — Android duration-based vibrate via reflection; iOS `InputSystem.Haptics` — requires device test matrix.
+- [ ] **Dict.cs colour names** — `00FFFF` should return `"Toska"` (not `"Sian"`); `FF00FF` should return `"Merah Lembayung"` (not `"Magenta"`); update matching test fixtures (TASK-04 rollover — high player-impact)
+- [ ] **BUG-4** — `targetColor` float-precision mismatch when species catalog active: replace `fishColor == targetColor` with species-ID comparison in `OnFishHit` (`GameManager.cs:441`)
+- [ ] **BUG-5** — Two simultaneous spears cause double-hit and round-skip: cancel previous spear in `SpearThrower.ThrowSpear()` before instantiating new one (`SpearThrower.cs:68`)
+- [ ] **BUG-7** — No in-game pause or quit path: add `PauseGame()` + "Kembali ke menu" option scoped to `EndGame()` call only (`GameManager.cs`)
+- [ ] **BUG-6** — `greetingPanel` auto-dismiss fallback: `Invoke(nameof(DismissGreeting), 5f)` when button not yet wired (`TombakanOnboarding.cs:38`) — blocked on scene wiring
+- [ ] **BUG-8** — Zen mode adds bonus to `float.MaxValue`: add `if (currentMode != GameMode.Zen)` guard before `timeLeft += TimeBonus.ForHit(comboStreak)` (`GameManager.cs:454`)

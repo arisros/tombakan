@@ -3,6 +3,12 @@ using UnityEngine;
 
 public class SpearThrower : MonoBehaviour
 {
+    /// <summary>
+    /// Fired once each time ThrowSpear() successfully launches a spear.
+    /// Subscribe for one-shot listeners (e.g. onboarding throw hint).
+    /// </summary>
+    public static event System.Action OnThrowFired;
+
     [Header("References")]
     public Camera arCamera;
     public GameObject spearFake;
@@ -47,6 +53,9 @@ public class SpearThrower : MonoBehaviour
     {
         if (!canThrow) return;
         canThrow = false;
+        OnThrowFired?.Invoke();
+
+        TombakanOnboarding.I?.NotifyFirstThrow();
 
         if (spearFake) spearFake.SetActive(false);
 
@@ -105,6 +114,7 @@ public class SpearThrower : MonoBehaviour
     IEnumerator LockRoutine(float delay)
     {
         canThrow = false;
+        if (leash) leash.spearTip = null;
         if (spearFake) spearFake.SetActive(false);
         yield return new WaitForSeconds(delay);
         if (spearFake) spearFake.SetActive(true);

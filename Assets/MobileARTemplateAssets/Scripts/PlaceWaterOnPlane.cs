@@ -9,6 +9,7 @@ public class PlaceWaterOnPlane : MonoBehaviour
     public ARPlaneManager planeManager;
     public ARPointCloudManager pointCloudManager;
     public GameObject waterPlane;
+    public FishSpawner fishSpawner;
 
     [SerializeField] TMP_Text scanLabel;
 
@@ -86,5 +87,22 @@ public class PlaceWaterOnPlane : MonoBehaviour
         {
             pointCloudManager.enabled = false;
         }
+    }
+
+    /// <summary>
+    /// Resets placement so the player can pick a new AR surface.
+    /// Called by the "Posisi ulang" button in the pre-game HUD.
+    /// </summary>
+    public void Reposition()
+    {
+        waterPlane.SetActive(false);
+        if (fishSpawner != null) fishSpawner.ClearAll();
+
+        if (planeManager != null)
+            planeManager.enabled = true;
+        if (pointCloudManager != null)
+            pointCloudManager.enabled = true;
+
+        enabled = true; // re-arm Update() to accept the next tap
     }
 }
