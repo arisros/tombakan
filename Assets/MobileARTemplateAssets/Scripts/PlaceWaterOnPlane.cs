@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 using UnityEngine.XR.ARFoundation;
 
@@ -9,10 +10,14 @@ public class PlaceWaterOnPlane : MonoBehaviour
     public ARPointCloudManager pointCloudManager;
     public GameObject waterPlane;
 
+    [SerializeField] TMP_Text scanLabel;
+
     static List<ARRaycastHit> hits = new();
 
     void Update()
     {
+        UpdateScanLabel();
+
         if (Input.touchCount == 0)
             return;
 
@@ -33,9 +38,23 @@ public class PlaceWaterOnPlane : MonoBehaviour
             waterPlane.transform.position = hitPose.position;
             waterPlane.SetActive(true);
 
+            if (scanLabel != null)
+                scanLabel.gameObject.SetActive(false);
+
             DisableARPlanes();
             enabled = false; // one-shot placement; prevents mid-game re-positioning
         }
+    }
+
+    void UpdateScanLabel()
+    {
+        if (scanLabel == null)
+            return;
+
+        bool hasPlane = planeManager != null && planeManager.trackables.count > 0;
+        scanLabel.text = hasPlane
+            ? "Ketuk untuk menempatkan air"
+            : "Arahkan kamera ke lantai";
     }
 
     void DisableARPlanes()
