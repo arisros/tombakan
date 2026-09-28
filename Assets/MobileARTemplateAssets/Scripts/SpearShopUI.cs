@@ -102,7 +102,7 @@ public class SpearShopUI : MonoBehaviour
             btn.onClick.RemoveAllListeners();
             btn.onClick.AddListener(() =>
             {
-                if (SpearStore.Buy(skin.id, skin.price, skin.currency))
+                if (SpearStore.Buy(skin.id, skin.price, skin.currency) == BuyResult.Success)
                 {
                     SpearStore.Equip(skin.id);
                     Refresh();
