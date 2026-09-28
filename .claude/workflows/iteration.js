@@ -10,7 +10,7 @@ export const meta = {
   ],
 }
 
-const REPO = '/root/workspace/arisros/tombakan'
+const REPO = '/home/user/tombakan'
 const weekNum = args && args.week ? args.week : '?'
 
 const TESTER_SCHEMA = {
