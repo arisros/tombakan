@@ -8,6 +8,7 @@
         "Unity.Mathematics",
         "Unity.XR.CoreUtils",
         "Unity.XR.ARFoundation",
+        "Unity.XR.ARSubsystems",
         "Unity.XR.Interaction.Toolkit",
         "Unity.XR.Interaction.Toolkit.Samples.StarterAssets",
         "Unity.XR.Interaction.Toolkit.Samples.ARStarterAssets"
