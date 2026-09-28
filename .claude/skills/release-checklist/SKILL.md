@@ -10,7 +10,7 @@ When invoked, perform the following audit live (do not rely on cached knowledge)
 ## Audit Steps
 1. Read `ProjectSettings/ProjectSettings.asset` — check bundle IDs, SDK versions, camera description
 2. Check if `.github/workflows/unity-tests.yml` exists
-3. Check if `PRIVACY.md` exists in repo root
+3. Check if `docs/product/PRIVACY.md` exists
 4. Check if `Assets/Tests/EditMode/` and `Assets/Tests/PlayMode/` directories exist
 5. Check if `Assets/MobileARTemplateAssets/Scripts/GameConstants.cs` exists
 
@@ -31,7 +31,7 @@ For each item below, output: ✅ DONE — <evidence> OR ⏳ PENDING — <what's 
 - `.github/workflows/unity-tests.yml` exists
 
 ### Privacy & Legal
-- `PRIVACY.md` exists in repo root
+- `docs/product/PRIVACY.md` exists
 - Camera usage justification is documented
 
 ### Store Assets (manual check — report what's needed)

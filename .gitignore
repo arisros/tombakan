@@ -1,32 +1,33 @@
+# Unity (github/gitignore Unity.gitignore)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+/[Aa]ssets/AssetStoreTools*
+/[Aa]ssets/Plugins/Editor/JetBrains*
+/[Aa]ssets/AddressableAssetsData/*/*.bin*
+/[Aa]ssets/StreamingAssets/aa.meta
+/[Aa]ssets/StreamingAssets/aa/*
+*_BurstDebugInformation_DoNotShip/
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+sysinfo.txt
+crashlytics-build.properties
 
-# =========================
-# Unity generated folders
-# =========================
-[Ll]ibrary/
-[Tt]emp/
-[Oo]bj/
-[Bb]uild/
-[Bb]uilds/
-[Ll]ogs/
-[Mm]emoryCaptures/
-
-# Addressables cache
-[Aa]ssets/AddressableAssetsData/*/*.bin*
-
-# =========================
-# OS generated files
-# =========================
-.DS_Store
-.DS_Store?
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-
-# =========================
-# IDE / Editor files
-# =========================
+# Generated IDE project files
+.vs/
 .vscode/
 .idea/
+.gradle/
+ExportedObj/
+.consulo/
 *.csproj
 *.unityproj
 *.sln
@@ -37,110 +38,26 @@ Desktop.ini
 *.pidb
 *.booproj
 *.svd
-
-# Rider
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
 *.sln.iml
 
-# =========================
-# Unity specific
-# =========================
-*.pidb.meta
-*.pdb.meta
-*.mdb.meta
-
-# Crash reports
-sysinfo.txt
-
-# =========================
-# Build artifacts
-# =========================
+# Build output
 *.apk
 *.aab
-*.exe
-*.app
 *.unitypackage
+*.app
 
-# =========================
-# Audio / Large temp files
-# (KEEP Assets/Audio/*.mp3 TRACKED!)
-# =========================
-*.wav~
-*.mp3~
+# Signing and secrets
+*.keystore
+*.jks
+*.ulf
+.env
+.env.*
 
-# =========================
-# Logs
-# =========================
-*.log
-
-# =========================
-# JetBrains Rider / VS Code cache
-# =========================
-.idea/
-.vscode/
-
-# =========================
-# Unity Cloud / Collaborate
-# =========================
-.collabignore
-Tombakan_BurstDebugInformation_DoNotShip
-
-# === backup-autoignore: build artifacts & deps (bukan config) ===
 # OS
 .DS_Store
 Thumbs.db
-# Deps
-node_modules/
-vendor/
-.venv/
-venv/
-__pycache__/
-*.pyc
-*.egg-info/
-# Build output
-build/
-Build/
-Builds/
-dist/
-out/
-bin/
-obj/
-target/
-.gradle/
-*.class
-*.o
-*.a.out
-a.out
-# Unity
-[Ll]ibrary/
-[Tt]emp/
-[Oo]bj/
-[Ll]ogs/
-[Uu]serSettings/
-[Mm]emoryCaptures/
-[Rr]ecordings/
-*.csproj
-*.unityproj
-*.sln.DotSettings.user
-# Godot
-.godot/
-.import/
-export_presets.cfg
-# Flutter / Dart
-.dart_tool/
-.flutter-plugins
-.flutter-plugins-dependencies
-**/ios/Pods/
-**/android/.gradle/
-**/build/
-# Node / web
-.next/
-.nuxt/
-.cache/
-.parcel-cache/
-# Secrets (config contoh tetap ikut: .env.example)
-.env
-.env.local
-.env.*.local
-*.pem
-*.key
-!*.pub
+Desktop.ini

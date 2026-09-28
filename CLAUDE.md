@@ -99,3 +99,17 @@ Timer reaches 0:
 | `Assets/MobileARTemplateAssets/Scripts/Dict.cs` | Indonesian color names |
 | `Assets/Scenes/GamePlay.unity` | Only scene in project |
 | `Packages/manifest.json` | All UPM dependencies |
+
+## Docs Layout
+
+Nothing but tooling config goes in the repo root. Write docs here:
+
+| Path | Contents |
+|---|---|
+| `docs/product/` | `ROADMAP.md`, `BACKLOG.md`, `SHIP_PLAN.md`, `PRIVACY.md` |
+| `docs/specs/` | Feature specs and `species-data.md` |
+| `docs/design/` | UI mockups |
+| `docs/ci/` | CI setup |
+| `docs/iterations/LOG.md` | One entry per weekly iteration |
+| `docs/iterations/week-NN/` | `scope.md`, `tester-report.md`, `tester-recheck.md` for that week |
+| `docs/qa/` | Manual test plans |

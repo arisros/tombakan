@@ -36,7 +36,7 @@ public static class TombakanSetupWizard
 
         var catalog = ScriptableObject.CreateInstance<FishCatalog>();
 
-        // Starter species — 8 verified Indonesian marine/freshwater fish (see docs/species-data.md)
+        // 8 Indonesian species, sources in docs/specs/species-data.md
         // Scientific names, rarities, colors, and fun facts are cross-checked against
         // FishBase, LIPI, and KKP references. Do not change names/latin without re-verifying.
         var speciesData = new[]

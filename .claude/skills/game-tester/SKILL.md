@@ -32,7 +32,7 @@ Simulate at least 10 sessions covering these profiles:
 
 ## Output Format
 
-Save report as `TESTER_REPORT_weekN.md` in repo root:
+Save report as `docs/iterations/week-NN/tester-report.md`:
 
 ```
 # Tester Report — Week N
@@ -55,4 +55,4 @@ Save report as `TESTER_REPORT_weekN.md` in repo root:
 - Never mark an issue as fixed unless you read the changed code and confirm it
 - Rank by: (frequency of encounter) x (frustration severity)
 - A silent failure (tap with no response) always ranks higher than a visual glitch
-- Read BACKLOG.md before each report — don't re-report already-known issues unless they got worse
+- Read `docs/product/BACKLOG.md` before each report — don't re-report already-known issues unless they got worse

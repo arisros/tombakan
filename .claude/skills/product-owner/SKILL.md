@@ -1,12 +1,12 @@
 ---
 name: product-owner
-description: Reads tester reports and BACKLOG.md, scopes each iteration to 3-5 high-impact items, assigns tasks to the right specialist (dev/artist/ui). Balances bug fixes vs. feel improvements. Writes ITERATION_N_SCOPE.md.
+description: Reads tester reports and docs/product/BACKLOG.md, scopes each iteration to 3-5 high-impact items, assigns tasks to the right specialist (dev/artist/ui). Balances bug fixes vs. feel improvements. Writes docs/iterations/week-NN/scope.md.
 ---
 
 # Product Owner Skill
 
-Reads: `TESTER_REPORT_weekN.md`, `BACKLOG.md`, `ITERATION_LOG.md`  
-Outputs: `ITERATION_weekN_SCOPE.md` with specific tasks, owner, and acceptance criteria
+Reads: `docs/iterations/week-NN/tester-report.md`, `docs/product/BACKLOG.md`, `docs/iterations/LOG.md`  
+Outputs: `docs/iterations/week-NN/scope.md` with specific tasks, owner, and acceptance criteria
 
 ## Scoping Rules
 
@@ -26,7 +26,7 @@ Outputs: `ITERATION_weekN_SCOPE.md` with specific tasks, owner, and acceptance c
 
 ## Output Format
 
-Save as `ITERATION_weekN_SCOPE.md`:
+Save as `docs/iterations/week-NN/scope.md`:
 
 ```
 # Iteration Week N — Scope
@@ -47,7 +47,7 @@ Why these tasks were chosen over alternatives.
 ## Process
 
 1. Read the full tester report — don't skip the "Polish" section
-2. Cross-reference with BACKLOG.md priority levels
-3. Check ITERATION_LOG.md — don't pick something that was already attempted
+2. Cross-reference with docs/product/BACKLOG.md priority levels
+3. Check docs/iterations/LOG.md — don't pick something that was already attempted
 4. Draft scope, verify each task has a single clear owner and measurable done state
-5. Write ITERATION_weekN_SCOPE.md
+5. Write docs/iterations/week-NN/scope.md

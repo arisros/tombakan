@@ -82,7 +82,7 @@ See `docs/specs/leveling-system.md`.
 - [x] `ScreenShake` — damped camera shake on correct/wrong hit.
 - [x] `HapticFeedback` — Handheld.Vibrate on Android/iOS.
 - [x] `PerformanceSettings` — low-end mode (30 fps, shadow disable, fixed 1/30).
-- [ ] Implement the UI redesign (`design/tombakan_ui_v0.svg`) in Unity.
+- [ ] Implement the UI redesign (`docs/design/tombakan_ui_v0.svg`) in Unity.
 - [ ] Real low-poly species models + spear skins (art TBD).
 - [ ] Shader/particle juice: water, "caught" dissolve/flop, splash (art TBD).
 
