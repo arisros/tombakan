@@ -122,8 +122,22 @@
 - [x] Result celebrations staggered — badge at +0.4 s, level-up panel at +0.8 s
 - [x] `AchievementToastPanel` + `AchievementToastText` added to scene, wired to `GameManager`
 
-## Week 7 Candidates (from Week 6 tester report)
-- [ ] Throw-mechanic tutorial hint for first-time players (UX-1) — `TombakanOnboarding` coaching step + hint panel ("Sentuh tombol untuk melempar tombak")
-- [ ] Platform-specific haptic differentiation (POLISH-2) — `AndroidJavaObject` duration on Android; `InputSystem.Haptics` on iOS — requires device test matrix
-- [ ] "Re-position water" button — complement the one-shot placement guard (TASK-02 partial from Week 5)
-- [ ] `DailyChallenge.TryClaimDailyBonus` — propagate level-up return value to caller so rewards are applied (BUG-2 partial — TombakanOnboarding fixed; DailyChallenge.cs:58 reward grant still skipped)
+### Week 7 (2026-09-28)
+- [x] SpearHit fishLayer fallback — unmasked `OverlapSphere` when `fishLayer == 0`; `Debug.LogError` in Editor/dev build
+- [x] FishSpawner.ApplyColor multi-mesh — `GetComponentsInChildren<Renderer>()` loop; per-instance `r.material` to prevent color bleed
+- [x] AR scan-state overlay — `PlaceWaterOnPlane` two-state scan label ("Arahkan kamera ke lantai" / "Ketuk untuk menempatkan air"), hidden after placement
+- [x] Fish prefab renderer audit — both prefabs confirmed URP Lit `BaseColorFish.mat`; `tuna.prefab` redirected from FBX sub-asset
+
+---
+
+## Week 8 Candidates (from Week 7 tester report)
+
+- [ ] **BUG-A: Daily bonus level-up reward silently skipped** — `DailyChallenge.TryClaimDailyBonus` (line 58) discards `ProgressionStore.AddXp` return value; `ApplyLevelReward` never called; unlocked species/skin/coins not granted. Fix: capture returned level, call `ApplyLevelReward` on level-up.
+- [ ] **UX-2: Throw-mechanic hint for first-time players** — `TombakanOnboarding` coaching step after water placement; hint panel "Sentuh tombol untuk melempar tombak". Deferred from Week 7; depends on UX-1 (TASK-03) now landed.
+- [ ] **UX-3: Water re-positioning button** — pre-game confirmation step with "Pindahkan air" button that re-enables `PlaceWaterOnPlane` and clears `waterPlane`. One-shot guard (Week 5 TASK-02) stays; this adds a voluntary reset path before timer starts.
+- [ ] **BUG-D: FishHitBox.StickSpear places spear at fish center, not impact point** — `FishHitBox.cs:32` sets `spear.position = transform.position`; should preserve position at `OnHit` call site. Visual improvement.
+- [ ] **POLISH-1: "COMBO!" → Indonesian** — `GameManager.cs:499`: replace "COMBO!" with "KOMBO!" or `×{multiplier}!` for language consistency.
+- [ ] **BUG-E: FishHitBox.hitRadius / SpearHit.hitRadius mismatch** — FishHitBox gizmo uses 0.12 m; SpearHit overlap uses 0.1 m. Inspector gizmo misleads when tuning hit size. Unify via shared field or constant.
+- [ ] **UX-4: targetColorLabel shows raw hex for catalog-based species** — `GameManager.PickNewTarget` sets `targetColorLabel.text` before species is resolved; prefer `targetSpecies.displayName` when a species is active.
+- [ ] **POLISH-3: Achievement toast no dismiss gesture** — `ShowAchievementsSequenced` auto-dismisses; speed-runner tapping "play again" cannot skip the toast sequence; toasts may persist across scene transition.
+- [ ] Platform-specific haptic differentiation (POLISH-2) — Android duration-based vibrate via reflection; iOS `InputSystem.Haptics` — requires device test matrix.

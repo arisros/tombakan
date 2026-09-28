@@ -1,5 +1,25 @@
 # Iteration Log
 
+## Week 7 — 2026-09-28
+
+**Branch:** `iteration/week-7`
+**Tasks completed:** 4
+
+| Task | Description | Files Changed |
+|------|-------------|---------------|
+| TASK-01 | SpearHit fishLayer fallback — `Awake` emits `Debug.LogError` when `fishLayer.value == 0`; `CheckFishHit` falls back to unmasked `Physics.OverlapSphere` so fish are always hittable regardless of Inspector assignment | `SpearHit.cs` |
+| TASK-02 | FishSpawner.ApplyColor multi-mesh — replace `GetComponentInChildren<Renderer>()` with `GetComponentsInChildren<Renderer>()` loop; `r.material` (not `sharedMaterial`) instances per fish to prevent cross-fish color bleed | `FishSpawner.cs` |
+| TASK-03 | AR scan-state overlay — `PlaceWaterOnPlane` gains `[SerializeField] TMP_Text scanLabel`; two-state logic: "Arahkan kamera ke lantai" while no planes, "Ketuk untuk menempatkan air" once planes detected, hidden after placement; null-safe throughout | `PlaceWaterOnPlane.cs`, `Assets/Scenes/GamePlay.unity` |
+| TASK-04 | Fish prefab renderer audit — confirmed both `FishFab.prefab` (layer 8) and `tuna.prefab` (layer 0) use single `SkinnedMeshRenderer` on `Cube.004` with `BaseColorFish.mat` (URP Lit, `_BaseColor`); `tuna.prefab` redirected from embedded FBX sub-asset to `BaseColorFish.mat` | `tuna.prefab` |
+
+**QA Tests added:** `Week7Tests.cs` — `SpearHit_ZeroMask_FindsNothing_FallbackFindsCollider`, `SpearHit_DefaultLayerMask_HasValueZero`, `ApplyColor_ThreeChildRenderers_AllReceiveTargetColor`, `ApplyColor_NoRenderers_DoesNotThrow`, `ApplyColor_SingleRenderer_StillPainted`
+
+**Artefacts:** `TESTER_REPORT_week7.md`, `ITERATION_week7_SCOPE.md`
+
+**Deferred to Week 8:** BUG-A (daily bonus level-up reward), UX-2 (throw-mechanic hint), UX-3 (water re-positioning button), BUG-D (spear snaps to fish center), POLISH-1 ("COMBO!" → Indonesian)
+
+---
+
 ## Week 6 — 2026-06-03
 
 **Branch:** `iteration/week-6`
