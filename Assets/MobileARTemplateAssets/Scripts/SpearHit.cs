@@ -7,6 +7,18 @@ public class SpearHit : MonoBehaviour
 
     bool hasHit;
 
+    void Awake()
+    {
+#if UNITY_EDITOR || DEVELOPMENT_BUILD
+        if (fishLayer.value == 0)
+            Debug.LogError(
+                "[SpearHit] fishLayer is unassigned (mask value = 0). " +
+                "Assign the Fish layer in the Inspector on this SpearHit component. " +
+                "Falling back to an unmasked OverlapSphere so hits are still registered.",
+                this);
+#endif
+    }
+
     void Update()
     {
         if (!hasHit)
@@ -15,7 +27,11 @@ public class SpearHit : MonoBehaviour
 
     void CheckFishHit()
     {
-        Collider[] hits = Physics.OverlapSphere(transform.position, hitRadius, fishLayer);
+        // When fishLayer is unassigned (value == 0 means no layers selected),
+        // fall back to an unmasked check so spears always register hits.
+        Collider[] hits = fishLayer.value == 0
+            ? Physics.OverlapSphere(transform.position, hitRadius)
+            : Physics.OverlapSphere(transform.position, hitRadius, fishLayer);
 
         foreach (var hit in hits)
         {

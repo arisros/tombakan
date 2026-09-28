@@ -99,10 +99,14 @@ public class FishSpawner : MonoBehaviour
             if (fish) Destroy(fish);
     }
 
-    void ApplyColor(GameObject fish, Color color)
+    /// <summary>
+    /// Applies <paramref name="color"/> to every Renderer found in <paramref name="fish"/>
+    /// and its children. Each Renderer receives its own material instance so fish do not
+    /// share a single material asset and color changes do not bleed across fish.
+    /// </summary>
+    public static void ApplyColor(GameObject fish, Color color)
     {
-        var renderer = fish.GetComponentInChildren<Renderer>();
-        if (renderer)
-            renderer.material.color = color;
+        foreach (var r in fish.GetComponentsInChildren<Renderer>())
+            r.material.color = color;
     }
 }
