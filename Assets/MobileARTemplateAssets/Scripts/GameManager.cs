@@ -87,7 +87,7 @@ public class GameManager : MonoBehaviour
 
     // --- Internal state ---
 
-    Color targetColor;
+    internal Color targetColor;
 
     int pointPerCorrectHit = 100;
     int penaltyPerWrongHit = 25;
@@ -106,8 +106,8 @@ public class GameManager : MonoBehaviour
     HashSet<string> newSpeciesThisGame = new HashSet<string>();
     List<string> collectedSpeciesIds   = new List<string>();
 
-    float timeLeft;
-    bool gameRunning;
+    internal float timeLeft;
+    internal bool gameRunning;
 
     void Awake()
     {

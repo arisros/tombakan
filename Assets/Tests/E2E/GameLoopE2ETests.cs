@@ -61,7 +61,7 @@ public class GameLoopE2ETests
         yield return null;
 
         Color target = GameManager.I.targetColor;
-        GameManager.I.OnFishHit(target);
+        GameManager.I.OnFishHit(target, "");
         yield return null;
 
         Assert.AreEqual(GameConstants.PointPerCorrectHit, GameManager.I.score);
@@ -75,7 +75,7 @@ public class GameLoopE2ETests
         yield return null;
 
         Color wrong = GameManager.I.targetColor == Color.red ? Color.green : Color.red;
-        GameManager.I.OnFishHit(wrong);
+        GameManager.I.OnFishHit(wrong, "");
         yield return null;
 
         Assert.AreEqual(-GameConstants.PenaltyPerWrongHit, GameManager.I.score);
@@ -90,12 +90,12 @@ public class GameLoopE2ETests
 
         for (int i = 0; i < 3; i++)
         {
-            GameManager.I.OnFishHit(GameManager.I.targetColor);
+            GameManager.I.OnFishHit(GameManager.I.targetColor, "");
             yield return null;
         }
 
         Color wrong = GameManager.I.targetColor == Color.red ? Color.green : Color.red;
-        GameManager.I.OnFishHit(wrong);
+        GameManager.I.OnFishHit(wrong, "");
         yield return null;
 
         int expected = 3 * GameConstants.PointPerCorrectHit - GameConstants.PenaltyPerWrongHit;
@@ -133,7 +133,7 @@ public class GameLoopE2ETests
 
         for (int i = 0; i < 2; i++)
         {
-            GameManager.I.OnFishHit(GameManager.I.targetColor);
+            GameManager.I.OnFishHit(GameManager.I.targetColor, "");
             yield return null;
         }
 
@@ -151,7 +151,7 @@ public class GameLoopE2ETests
 
         for (int i = 0; i < 4; i++)
         {
-            GameManager.I.OnFishHit(GameManager.I.targetColor);
+            GameManager.I.OnFishHit(GameManager.I.targetColor, "");
             yield return null;
         }
 
@@ -169,7 +169,7 @@ public class GameLoopE2ETests
 
         for (int i = 0; i < 5; i++)
         {
-            GameManager.I.OnFishHit(GameManager.I.targetColor);
+            GameManager.I.OnFishHit(GameManager.I.targetColor, "");
             yield return null;
         }
 
@@ -185,7 +185,7 @@ public class GameLoopE2ETests
         GameManager.I.StartGame();
         yield return null;
 
-        GameManager.I.OnFishHit(Color.red);
+        GameManager.I.OnFishHit(Color.red, "");
         yield return null;
 
         GameManager.I.timeLeft = 0.016f;
@@ -206,7 +206,7 @@ public class GameLoopE2ETests
         foreach (Color c in new[] { Color.red, Color.green, Color.blue })
         {
             GameManager.I.targetColor = c;
-            GameManager.I.OnFishHit(c);
+            GameManager.I.OnFishHit(c, "");
             yield return null;
         }
 
@@ -227,7 +227,7 @@ public class GameLoopE2ETests
         GameManager.I.StartGame();
         yield return null;
 
-        GameManager.I.OnFishHit(GameManager.I.targetColor);
+        GameManager.I.OnFishHit(GameManager.I.targetColor, "");
         yield return null;
 
         GameManager.I.timeLeft = 0.016f;

@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Tombakan.Tests.PlayMode")]
+[assembly: InternalsVisibleTo("Tombakan.Tests.E2E")]
 
 public static class GameConstants
 {

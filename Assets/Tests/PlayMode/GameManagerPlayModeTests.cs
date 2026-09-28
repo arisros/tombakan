@@ -58,7 +58,7 @@ public class GameManagerPlayModeTests
         yield return null;
         Color target = GameManager.I.targetColor;
         int before = GameManager.I.score;
-        GameManager.I.OnFishHit(target);
+        GameManager.I.OnFishHit(target, "");
         yield return null;
         Assert.AreEqual(before + GameConstants.PointPerCorrectHit, GameManager.I.score);
     }
@@ -70,7 +70,7 @@ public class GameManagerPlayModeTests
         yield return null;
         Color target = GameManager.I.targetColor;
         int before = GameManager.I.correctHitCount;
-        GameManager.I.OnFishHit(target);
+        GameManager.I.OnFishHit(target, "");
         yield return null;
         Assert.AreEqual(before + 1, GameManager.I.correctHitCount);
     }
@@ -82,7 +82,7 @@ public class GameManagerPlayModeTests
         yield return null;
         Color wrong = GameManager.I.targetColor == Color.red ? Color.green : Color.red;
         int before = GameManager.I.score;
-        GameManager.I.OnFishHit(wrong);
+        GameManager.I.OnFishHit(wrong, "");
         yield return null;
         Assert.AreEqual(before - GameConstants.PenaltyPerWrongHit, GameManager.I.score);
     }

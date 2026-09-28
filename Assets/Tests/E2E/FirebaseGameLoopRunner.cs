@@ -75,7 +75,7 @@ public class FirebaseGameLoopRunner : MonoBehaviour
         // ── Correct hit ───────────────────────────────────────────────
         Color target = GameManager.I.targetColor;
         int scoreBefore = GameManager.I.score;
-        GameManager.I.OnFishHit(target);
+        GameManager.I.OnFishHit(target, "");
         yield return new WaitForSeconds(0.1f);
 
         int afterCorrect = GameManager.I.score;
@@ -90,7 +90,7 @@ public class FirebaseGameLoopRunner : MonoBehaviour
         // ── Wrong hit ─────────────────────────────────────────────────
         Color wrong = GameManager.I.targetColor == Color.red ? Color.green : Color.red;
         int beforeWrong = GameManager.I.score;
-        GameManager.I.OnFishHit(wrong);
+        GameManager.I.OnFishHit(wrong, "");
         yield return new WaitForSeconds(0.1f);
 
         int afterWrong = GameManager.I.score;
